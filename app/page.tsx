@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import type { User } from "@supabase/supabase-js";
+import { createSupabaseBrowserClient } from "./lib/supabase-browser";
 
 type Service = {
   name: string;
@@ -379,7 +381,12 @@ function FieldHelp({ id, label, help, open, onToggle }: { id: string; label: str
 }
 
 export default function Home() {
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [view, setView] = useState<"discover" | "how-it-works" | "business" | "booking" | "dashboard" | "setup" | "info">("discover");
+  const [authUser, setAuthUser] = useState<User | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [businessId, setBusinessId] = useState<string | null>(null);
+  const [businessRole, setBusinessRole] = useState<"owner" | "manager" | "staff" | "booth_renter" | null>(null);
   const [infoPage, setInfoPage] = useState<"support" | "contact" | "privacy" | "terms">("support");
   const [template, setTemplate] = useState<"braider" | "barber" | "wig">("braider");
   const [specialties, setSpecialties] = useState<string[]>(["braider"]);
@@ -387,7 +394,6 @@ export default function Home() {
   const [setupStep, setSetupStep] = useState(1);
   const [setupPath, setSetupPath] = useState<"pro" | null>(null);
   const [accountReady, setAccountReady] = useState(false);
-  const [emailSignup, setEmailSignup] = useState(false);
   const [servicePlace, setServicePlace] = useState<string[]>(["At my shop or studio"]);
   const [teamSize, setTeamSize] = useState("Just me");
   const [selectedService, setSelectedService] = useState<Service>({
@@ -565,6 +571,67 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    let active = true;
+    const loadAccount = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!active) return;
+      setAuthUser(user);
+      if (user) {
+        const { data: memberships } = await supabase
+          .from("business_members")
+          .select("business_id, role, businesses(name, slug, settings, published)")
+          .eq("user_id", user.id)
+          .eq("active", true)
+          .limit(1);
+        const membership = memberships?.[0] as {
+          business_id: string;
+          role: "owner" | "manager" | "staff" | "booth_renter";
+          businesses: { name: string; slug: string; settings: Record<string, unknown>; published: boolean } | null;
+        } | undefined;
+        if (membership) {
+          setBusinessId(membership.business_id);
+          setBusinessRole(membership.role);
+          if (membership.businesses) {
+            setProfileName(membership.businesses.name);
+            setProfileSlug(membership.businesses.slug);
+            setProfilePublished(membership.businesses.published);
+            const settings = membership.businesses.settings || {};
+            if (typeof settings.tagline === "string") setProfileTagline(settings.tagline);
+            if (typeof settings.brandColor === "string") setThemeColor(settings.brandColor);
+          }
+        }
+        if (new URLSearchParams(window.location.search).get("studio") === "1") {
+          if (membership) setView("dashboard");
+          else {
+            setAccountReady(true);
+            setSetupPath("pro");
+            setSetupStep(1);
+            setView("setup");
+          }
+        }
+      } else if (new URLSearchParams(window.location.search).get("studio") === "1") {
+        window.location.replace("/auth");
+        return;
+      }
+      setAuthChecked(true);
+    };
+    void loadAccount();
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      setAuthUser(session?.user || null);
+    });
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  useEffect(() => {
+    if (!authChecked || authUser || (view !== "dashboard" && view !== "setup")) return;
+    window.location.assign("/auth");
+  }, [authChecked, authUser, view]);
+
+  useEffect(() => {
     if (!availableTimes.includes(selectedTime)) setSelectedTime(availableTimes[0] || "");
   }, [availableTimes, selectedTime]);
 
@@ -617,6 +684,75 @@ export default function Home() {
   function flash(message: string) {
     setToast(message);
     window.setTimeout(() => setToast(""), 2400);
+  }
+
+  async function ensureBusiness() {
+    if (!authUser) {
+      window.location.assign("/auth");
+      return null;
+    }
+    if (businessId) return businessId;
+    const baseSlug = (profileName || "your-business").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "your-business";
+    const slug = `${baseSlug}-${authUser.id.slice(0, 6)}`;
+    const { data: business, error } = await supabase
+      .from("businesses")
+      .insert({
+        owner_user_id: authUser.id,
+        name: profileName || "Your Business",
+        slug,
+        settings: { tagline: profileTagline, brandColor: themeColor },
+      })
+      .select("id")
+      .single();
+    if (error || !business) throw error || new Error("Business could not be created.");
+    const { error: membershipError } = await supabase.from("business_members").insert({
+      business_id: business.id,
+      user_id: authUser.id,
+      role: "owner",
+      active: true,
+    });
+    if (membershipError) throw membershipError;
+    setBusinessId(business.id);
+    setBusinessRole("owner");
+    setProfileSlug(slug);
+    return business.id as string;
+  }
+
+  async function openBusinessStudio() {
+    if (!authUser) {
+      window.location.assign("/auth");
+      return;
+    }
+    if (businessId) {
+      setView("dashboard");
+      return;
+    }
+    setAccountReady(true);
+    setSetupPath("pro");
+    setSetupStep(1);
+    setView("setup");
+  }
+
+  async function finishBusinessSetup() {
+    setSaving(true);
+    try {
+      await ensureBusiness();
+      setView("dashboard");
+      setDashTab("Booking channels");
+      flash("Your private Business Studio is ready.");
+    } catch {
+      flash("Veya could not create your business yet. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    setAuthUser(null);
+    setBusinessId(null);
+    setBusinessRole(null);
+    setView("discover");
   }
 
   async function saveProfile(publish: boolean) {
@@ -905,8 +1041,8 @@ export default function Home() {
           <button onClick={() => setView("business")}>Sample booking page</button>
         </nav>
         <div className="header-actions">
-          <button className="text-button" onClick={() => { setView("setup"); setSetupPath(null); setSetupStep(1); setAccountReady(false); }}>Log in</button>
-          <button className="dark-button" onClick={() => setView("setup")}>Get started</button>
+          <button className="text-button" onClick={() => void openBusinessStudio()}>{authUser ? "Business Studio" : "Log in"}</button>
+          <button className="dark-button" onClick={() => void openBusinessStudio()}>{authUser ? "Open Studio" : "Get started"}</button>
         </div>
       </header>}
 
@@ -1090,8 +1226,8 @@ export default function Home() {
             <div className="onboard-top">
               {(accountReady || setupPath || setupStep > 1) && <button onClick={() => {
                 if (setupStep > 1) setSetupStep(setupStep - 1);
-                else if (setupPath) { setSetupPath(null); setAccountReady(false); setEmailSignup(false); }
-                else { setAccountReady(false); setEmailSignup(false); }
+                else if (setupPath) { setSetupPath(null); setAccountReady(false); }
+                else { setAccountReady(false); }
               }}>← Back</button>}
               <span>{!accountReady ? "Create your business account" : `Business setup · ${setupStep} of 8`}</span>
             </div>
@@ -1101,30 +1237,13 @@ export default function Home() {
               <span className="step-kicker">WELCOME TO VEYA</span>
               <h1>Create your business account.</h1>
               <p>Set your services and availability, then start sharing one simple booking link.</p>
-              <SetupGuide title="This is only a guided sample">Google and email let you experience the complete setup. No real account, password, or Google connection is created yet.</SetupGuide>
+              <SetupGuide title="Secure Veya account">Create or sign in to your real account before adding private business, client, appointment, or payment information.</SetupGuide>
               <div className="auth-box">
-                <button className="google-button" onClick={() => { setAccountReady(true); setSetupPath("pro"); setSetupStep(1); flash("Sample Google account connected"); }}>
-                  <span className="google-mark">G</span><strong>Continue with Google</strong>
+                <button className="email-button" onClick={() => window.location.assign("/auth")}>
+                  <span>✉</span><strong>Create account or sign in</strong>
                 </button>
-                <div className="auth-divider"><i /><span>or</span><i /></div>
-                {!emailSignup ? (
-                  <button className="email-button" onClick={() => setEmailSignup(true)}>
-                    <span>✉</span><strong>Continue with email</strong>
-                  </button>
-                ) : (
-                  <div className="email-signup">
-                    <div className="field-grid">
-                      <label>First name<input defaultValue="Jamal" /></label>
-                      <label>Last name<input defaultValue="Wilson" /></label>
-                      <label className="full">Email address<input type="email" defaultValue="jamal@example.com" /></label>
-                      <label className="full">Create password<input type="password" defaultValue="veyademo123" /></label>
-                    </div>
-                    <button className="primary-action" onClick={() => { setAccountReady(true); setSetupPath("pro"); setSetupStep(1); flash("Sample Veya account created"); }}>Create business account →</button>
-                  </div>
-                )}
-                <p className="signin-note">Already have an account? <button onClick={() => setEmailSignup(true)}>Sign in</button></p>
               </div>
-              <small className="demo-note">Demo setup — no real Google account or password is connected yet.</small>
+              <small className="demo-note">Authentication, email confirmation, and password recovery are connected to Veya Production.</small>
             </div>}
 
             {setupPath === "pro" && <div className="onboard-card business-wizard">
@@ -1146,7 +1265,7 @@ export default function Home() {
               {setupStep === 3 && <WizardScreen kicker="BUSINESS DETAILS" title="Tell clients who they’re booking." copy="These details appear in your booking flow and confirmations.">
                 <SetupGuide title="This identifies your booking link">Use the business name clients know. You can decide later whether to add a full landing page.</SetupGuide>
                 <FieldHelp id="public-details" label="What will clients see?" help="Your business name, booking contact information, and service location can appear during booking and in confirmations. Your personal account email and private account details remain hidden." open={help === "public-details"} onToggle={(id) => setHelp(help === id ? null : id)} />
-                <div className="field-grid"><label className="full">Business name<input placeholder="Enter your business name" /></label><label>Business phone<input placeholder="Business phone number" /></label><label>Public email<input placeholder="Business email address" /></label><label className="full">Business address<input placeholder="Street, city, state, ZIP" /></label></div>
+                <div className="field-grid"><label className="full">Business name<input value={profileName === "Your Business" ? "" : profileName} onChange={(e)=>setProfileName(e.target.value)} placeholder="Enter your business name" /></label><label>Business phone<input placeholder="Business phone number" /></label><label>Public email<input placeholder="Business email address" /></label><label className="full">Business address<input placeholder="Street, city, state, ZIP" /></label></div>
               </WizardScreen>}
               {setupStep === 4 && <WizardScreen kicker="STARTING SERVICE MENU" title="Make the menu yours." copy="Veya gives you a useful starting point. Edit, remove, reorder, or add anything your business actually offers.">
                 <div className="setup-tip"><button onClick={() => setHelp(help === "services" ? null : "services")}>i</button><span><strong>Nothing here is permanent.</strong> Tap any service to change its name, time, price, deposit, or consultation rule.</span></div>
@@ -1260,7 +1379,7 @@ export default function Home() {
                 </div>
                 <SetupGuide title="Already have a website?">Use the same booking link as a button, pop-up, or embedded booking panel on the site you already own.</SetupGuide>
                 <span className="step-kicker">SETUP COMPLETE</span><h1>You’re ready to accept bookings.</h1><p>Enter Business Studio to manage appointments, connect payments, share your link, and fine-tune your services.</p>
-                <div className="launch-buttons"><button onClick={() => setSetupStep(2)}>Review details</button><button className="primary-action" onClick={() => { setView("dashboard"); setDashTab("Booking channels"); }}>Get my booking link →</button></div>
+                <div className="launch-buttons"><button onClick={() => setSetupStep(2)}>Review details</button><button className="primary-action" disabled={saving} onClick={() => void finishBusinessSetup()}>{saving ? "Creating your business…" : "Get my booking link →"}</button></div>
               </div>}
               {setupStep < 8 && <WizardNav disabled={setupStep === 1 && !specialties.length} onNext={() => setSetupStep(setupStep + 1)} label={setupStep === 7 ? "Create my booking link →" : "Continue →"} />}
             </div>}
@@ -1512,7 +1631,7 @@ export default function Home() {
             <div className="studio-brand"><div className="brand light"><span className="brand-mark">V</span><span>veya</span></div><span>PRO</span></div>
             <button className="dash-business" onClick={()=>setDashTab("Profile")}>
               <div className="coral-logo">YB</div>
-              <div><strong>Your Business</strong><small>Business studio</small></div>
+              <div><strong>{profileName}</strong><small>{businessRole ? `${businessRole.replace("_", " ")} access` : "Business studio"}</small></div>
               <span className="business-switch">⌄</span>
             </button>
             <nav aria-label="Business Studio">
@@ -1529,6 +1648,7 @@ export default function Home() {
                 <span className="nav-label">ACCOUNT</span>
                 <button onClick={()=>flash("Business settings opened.")}><i>⚙</i><span>Settings</span></button>
                 <button onClick={()=>flash("Veya help center opened.")}><i>?</i><span>Help & support</span></button>
+                <button onClick={() => void signOut()}><i>↗</i><span>Sign out</span></button>
               </div>
             </nav>
             <div className="nav-footer"><div><span>PRO PLAN</span><strong>Everything is active</strong></div><button aria-label="Plan details">›</button></div>
