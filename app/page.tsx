@@ -170,11 +170,26 @@ const buildMenuService = (name: string, duration: string, price: number, deposit
 
 type SavedAppointment = {
   id: string;
+  client_id?: string;
   client_name: string;
   service_name: string;
   appointment_date: string;
   start_time: string;
   status: string;
+  starts_at?: string;
+  ends_at?: string;
+  client_notes?: string;
+};
+
+type ClientRecord = {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  notes: string;
+  visit_count: number;
+  last_visit_at: string | null;
+  photos?: Array<{ id: string; storage_path: string; purpose: string }>;
 };
 
 type PaymentTransaction = {
@@ -461,6 +476,10 @@ export default function Home() {
   const [profileDirty, setProfileDirty] = useState(false);
   const [previewSection, setPreviewSection] = useState("Hero");
   const [savedAppointments, setSavedAppointments] = useState<SavedAppointment[]>([]);
+  const [productionClients, setProductionClients] = useState<ClientRecord[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [clientNoteDraft, setClientNoteDraft] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dataReady, setDataReady] = useState(false);
   const [paymentConnected, setPaymentConnected] = useState(false);
@@ -559,6 +578,9 @@ export default function Home() {
   const filteredServices = useMemo(() => services.filter(service =>
     `${service.name} ${service.description}`.toLowerCase().includes(serviceQuery.toLowerCase())
   ), [serviceQuery]);
+  const selectedClient = productionClients.find(client => client.id === selectedClientId) || productionClients[0] || null;
+  const selectedAppointmentRecord = savedAppointments.find(appointment => appointment.client_name === selectedAppointment) || null;
+  const selectedClientHistory = selectedClient ? savedAppointments.filter(appointment => appointment.client_id === selectedClient.id) : [];
 
   const addonTotal = selectedAddons.reduce((sum, addon) => sum + (ownerAddonCatalog.find(item => item.name === addon)?.price || 0), 0);
   const addonMinutes = selectedAddons.reduce((sum, addon) => sum + (ownerAddonCatalog.find(item => item.name === addon)?.minutes || 0), 0);
@@ -569,6 +591,61 @@ export default function Home() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (!businessId || !authUser) return;
+    let active = true;
+    const loadProductionRecords = async () => {
+      const [appointmentResult, clientResult] = await Promise.all([
+        supabase
+          .from("appointments")
+          .select("id, client_id, starts_at, ends_at, status, client_notes, clients(name), services(name)")
+          .eq("business_id", businessId)
+          .order("starts_at", { ascending: true }),
+        supabase
+          .from("clients")
+          .select("id, name, email, phone, notes, visit_count, last_visit_at, client_photos(id, storage_path, purpose)")
+          .eq("business_id", businessId)
+          .order("updated_at", { ascending: false }),
+      ]);
+      if (!active) return;
+      if (appointmentResult.error) flash("Appointments could not be loaded.");
+      else {
+        const rows = (appointmentResult.data || []) as unknown as Array<{
+          id: string;
+          client_id: string;
+          starts_at: string;
+          ends_at: string;
+          status: string;
+          client_notes: string;
+          clients: { name: string } | null;
+          services: { name: string } | null;
+        }>;
+        setSavedAppointments(rows.map(row => ({
+          id: row.id,
+          client_id: row.client_id,
+          client_name: row.clients?.name || "Client",
+          service_name: row.services?.name || "Service",
+          appointment_date: new Date(row.starts_at).toLocaleDateString(),
+          start_time: new Date(row.starts_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
+          status: row.status,
+          starts_at: row.starts_at,
+          ends_at: row.ends_at,
+          client_notes: row.client_notes,
+        })));
+      }
+      if (clientResult.error) flash("Client records could not be loaded.");
+      else {
+        const clients = (clientResult.data || []) as unknown as ClientRecord[];
+        setProductionClients(clients);
+        setSelectedClientId(current => current || clients[0]?.id || null);
+        if (clients[0]) setClientNoteDraft(clients[0].notes || "");
+      }
+      setDataReady(true);
+    };
+    void loadProductionRecords();
+    return () => { active = false; };
+  }, [authUser, businessId, supabase]);
 
   useEffect(() => {
     let active = true;
@@ -789,30 +866,106 @@ export default function Home() {
   async function createAppointment() {
     setSaving(true);
     try {
-      const response = await fetch("/api/veya", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ type: "appointment", appointment: appointmentDraft }),
+      const activeBusinessId = await ensureBusiness();
+      if (!activeBusinessId) return;
+      const durationMatch = appointmentDraft.duration.match(/(?:(\d+)\s*hr)?\s*(?:(\d+)\s*min)?/i);
+      const durationMinutes = Math.max(5, Number(durationMatch?.[1] || 0) * 60 + Number(durationMatch?.[2] || 0));
+      const start = new Date(`${appointmentDraft.date} ${appointmentDraft.time}`);
+      const service = serviceCatalog.find(item => item.name === appointmentDraft.service);
+      const { error } = await supabase.rpc("create_studio_appointment", {
+        p_business_id: activeBusinessId,
+        p_client_name: appointmentDraft.client,
+        p_client_email: "",
+        p_client_phone: "",
+        p_client_notes: "",
+        p_service_name: appointmentDraft.service,
+        p_starts_at: start.toISOString(),
+        p_duration_minutes: durationMinutes,
+        p_subtotal_cents: Math.round((service?.minPrice || 0) * 100),
       });
-      const data = await response.json();
-      if (!response.ok) {
-        flash(data.error || "That appointment could not be created.");
-        return;
-      }
-      setSavedAppointments(current => [...current, {
-        id: data.id,
-        client_name: appointmentDraft.client,
-        service_name: appointmentDraft.service,
-        appointment_date: appointmentDraft.date,
-        start_time: appointmentDraft.time,
-        status: "Confirmed",
-      }]);
+      if (error) throw error;
+      const { data: appointments } = await supabase
+        .from("appointments")
+        .select("id, client_id, starts_at, ends_at, status, client_notes, clients(name), services(name)")
+        .eq("business_id", activeBusinessId)
+        .order("starts_at", { ascending: true });
+      const rows = (appointments || []) as unknown as Array<{id:string;client_id:string;starts_at:string;ends_at:string;status:string;client_notes:string;clients:{name:string}|null;services:{name:string}|null}>;
+      setSavedAppointments(rows.map(row => ({
+        id: row.id, client_id: row.client_id, client_name: row.clients?.name || "Client",
+        service_name: row.services?.name || "Service", appointment_date: new Date(row.starts_at).toLocaleDateString(),
+        start_time: new Date(row.starts_at).toLocaleTimeString([], {hour:"numeric",minute:"2-digit"}),
+        status: row.status, starts_at: row.starts_at, ends_at: row.ends_at, client_notes: row.client_notes,
+      })));
       setNewAppointmentOpen(false);
       flash(`Appointment saved for ${appointmentDraft.client}.`);
-    } catch {
-      flash("Veya could not save that appointment yet.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      flash(message.toLowerCase().includes("overlap") || message.toLowerCase().includes("conflict")
+        ? "That time was just booked. Choose another opening."
+        : "Veya could not save that appointment yet.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function changeAppointmentStatus(appointmentId: string, status: "confirmed" | "completed" | "cancelled" | "no_show") {
+    setSaving(true);
+    try {
+      const reason = status === "cancelled" ? window.prompt("Cancellation reason (optional)") || "" : "";
+      const { error } = await supabase.rpc("update_studio_appointment_status", {
+        p_appointment_id: appointmentId,
+        p_status: status,
+        p_reason: reason,
+      });
+      if (error) throw error;
+      setSavedAppointments(current => current.map(item => item.id === appointmentId ? {...item, status} : item));
+      flash(status === "no_show" ? "No-show recorded with a permanent event." : `Appointment marked ${status.replace("_", " ")}.`);
+    } catch {
+      flash("That appointment status could not be updated.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveClientNote() {
+    if (!businessId || !selectedClientId) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("clients").update({ notes: clientNoteDraft, updated_at: new Date().toISOString() })
+        .eq("business_id", businessId).eq("id", selectedClientId);
+      if (error) throw error;
+      setProductionClients(current => current.map(client => client.id === selectedClientId ? {...client, notes: clientNoteDraft} : client));
+      flash("Private client note saved.");
+    } catch {
+      flash("The client note could not be saved.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function uploadClientPhoto(file?: File) {
+    if (!file || !businessId || !selectedClientId || !authUser) return;
+    setUploadingPhoto(true);
+    try {
+      const safeName = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
+      const storagePath = `${businessId}/${selectedClientId}/${crypto.randomUUID()}-${safeName}`;
+      const { error: uploadError } = await supabase.storage.from("client-photos").upload(storagePath, file, { upsert: false });
+      if (uploadError) throw uploadError;
+      const { data, error } = await supabase.from("client_photos").insert({
+        business_id: businessId, client_id: selectedClientId, storage_path: storagePath,
+        purpose: "inspiration", uploaded_by: authUser.id,
+      }).select("id, storage_path, purpose").single();
+      if (error) {
+        await supabase.storage.from("client-photos").remove([storagePath]);
+        throw error;
+      }
+      setProductionClients(current => current.map(client => client.id === selectedClientId
+        ? {...client, photos: [...(client.photos || []), data]} : client));
+      flash("Private client photo uploaded.");
+    } catch {
+      flash("The photo could not be uploaded.");
+    } finally {
+      setUploadingPhoto(false);
     }
   }
 
@@ -1733,7 +1886,7 @@ export default function Home() {
                   {[["10:00 AM","Danielle Carter","Cornrows","2h 30m","Confirmed","$140"],["1:30 PM","Nia Brooks","Boho Braids","5h","Confirmed","$245"]].filter(row=>appointmentFilter==="All"||row[4]===appointmentFilter.replace("Requests","Request")).map(row=><button key={row[1]} onClick={()=>setSelectedAppointment(row[1])}><time>{row[0]}</time><span className="client-photo">{row[1][0]}</span><span className="list-client"><strong>{row[1]}</strong><small>{row[2]} · {row[3]}</small></span><em className={row[4].toLowerCase()}>{row[4]}</em><b>{row[5]}</b><i>›</i></button>)}
                 </div></div>
               </div>}
-              {selectedAppointment&&<aside className="appointment-drawer"><button className="drawer-close" onClick={()=>setSelectedAppointment(null)}>×</button><span>APPOINTMENT DETAILS</span><div className="drawer-client"><div className="client-photo large">{selectedAppointment[0]}</div><div><h3>{selectedAppointment}</h3><p>Returning client · 5 visits</p></div></div><div className="drawer-service"><small>SERVICE</small><strong>{selectedAppointment.includes("Monique")?"Starter Loc Consultation":selectedAppointment.includes("Tia")?"Retwist & Style":selectedAppointment.includes("Aaliyah")?"Box Braids":"Knotless Braids"}</strong><p>Tue, July 28 · 9:00 AM</p></div><div className="drawer-status"><span>✓ Confirmed</span><span>✓ Deposit paid</span></div><div className="drawer-actions"><button onClick={()=>flash("Client message opened.")}>Message</button><button onClick={()=>flash("Appointment editor opened.")}>Edit appointment</button></div><button className="drawer-more" onClick={()=>flash("More appointment actions opened.")}>More actions ···</button></aside>}
+              {selectedAppointment&&<aside className="appointment-drawer"><button className="drawer-close" onClick={()=>setSelectedAppointment(null)}>×</button><span>APPOINTMENT DETAILS</span><div className="drawer-client"><div className="client-photo large">{selectedAppointment[0]}</div><div><h3>{selectedAppointment}</h3><p>{selectedAppointmentRecord ? "Saved production client" : "Example appointment"}</p></div></div><div className="drawer-service"><small>SERVICE</small><strong>{selectedAppointmentRecord?.service_name || (selectedAppointment.includes("Monique")?"Starter Loc Consultation":selectedAppointment.includes("Tia")?"Retwist & Style":selectedAppointment.includes("Aaliyah")?"Box Braids":"Knotless Braids")}</strong><p>{selectedAppointmentRecord ? `${selectedAppointmentRecord.appointment_date} · ${selectedAppointmentRecord.start_time}` : "Tue, July 28 · 9:00 AM"}</p></div><div className="drawer-status"><span>✓ {(selectedAppointmentRecord?.status || "Confirmed").replace("_"," ")}</span><span>{selectedAppointmentRecord ? "✓ Permanent history active" : "✓ Example record"}</span></div>{selectedAppointmentRecord&&<div className="drawer-actions"><button disabled={saving} onClick={()=>void changeAppointmentStatus(selectedAppointmentRecord.id,"completed")}>Complete</button><button disabled={saving} onClick={()=>void changeAppointmentStatus(selectedAppointmentRecord.id,"no_show")}>No-show</button><button disabled={saving} onClick={()=>void changeAppointmentStatus(selectedAppointmentRecord.id,"cancelled")}>Cancel</button></div>}<button className="drawer-more" onClick={()=>flash(selectedAppointmentRecord ? "Every change is saved in appointment history." : "This is an example appointment.")}>Appointment history ···</button></aside>}
               {newAppointmentOpen&&<div className="appointment-modal-backdrop" onClick={()=>setNewAppointmentOpen(false)}><form className="appointment-modal" onClick={(e)=>e.stopPropagation()} onSubmit={(e)=>{e.preventDefault();void createAppointment()}}><button type="button" className="drawer-close" onClick={()=>setNewAppointmentOpen(false)}>×</button><span>NEW APPOINTMENT</span><h2>Add to your calendar</h2><label>Client<input required value={appointmentDraft.client} onChange={(e)=>setAppointmentDraft({...appointmentDraft,client:e.target.value})} placeholder="Search or enter a client" /></label><label>Service<select value={appointmentDraft.service} onChange={(e)=>{const item=serviceCatalog.find(service=>service.name===e.target.value);setAppointmentDraft({...appointmentDraft,service:e.target.value,duration:item?durationOptionsFor(item)[0]:appointmentDraft.duration})}}>{(["Braiders","Weave/Wigs","Barbers","Locticians"] as const).map(category=><optgroup key={category} label={category}>{serviceCatalog.filter(service=>service.category===category).map(service=><option key={`${category}-${service.name}`}>{service.name}</option>)}</optgroup>)}</select></label><div><label>Duration<select value={appointmentDraft.duration} onChange={(e)=>setAppointmentDraft({...appointmentDraft,duration:e.target.value})}>{durationOptionsFor(serviceCatalog.find(service=>service.name===appointmentDraft.service)||serviceCatalog[0]).map(duration=><option key={duration}>{duration}</option>)}</select></label><label>Start time<select value={appointmentDraft.time} onChange={(e)=>setAppointmentDraft({...appointmentDraft,time:e.target.value})}>{times.map(time=><option key={time}>{time}</option>)}</select></label></div><label>Date<input type="date" value={appointmentDraft.date} onChange={(e)=>setAppointmentDraft({...appointmentDraft,date:e.target.value})} /></label><aside>Veya checks this owner’s saved appointments before confirming the time.</aside><button className="create-appointment" disabled={saving} type="submit">{saving ? "Saving…" : "Create appointment"}</button></form></div>}
             </section>}
             {dashTab === "Services" && <section className="services-workspace">
@@ -1778,16 +1931,18 @@ export default function Home() {
               </div>
             </section>}
             {dashTab === "Clients" && <section className="crm-workspace">
-              <div className="crm-head"><div><span>CLIENT BOOK</span><h2>Relationships, not just appointments.</h2><p>History, notes, preferences, forms, and rebooking live together.</p></div><div className="crm-search"><input value={clientQuery} onChange={(e)=>setClientQuery(e.target.value)} placeholder="Search clients…" /><button onClick={()=>flash("New client form opened.")}>＋ Add client</button></div></div>
+              <div className="crm-head"><div><span>CLIENT BOOK</span><h2>Relationships, not just appointments.</h2><p>History, notes, preferences, forms, and rebooking live together.</p></div><div className="crm-search"><input value={clientQuery} onChange={(e)=>setClientQuery(e.target.value)} placeholder="Search clients…" /><button onClick={()=>flash("New clients are created when an appointment is saved.")}>＋ Add client</button></div></div>
               <div className="crm-layout">
                 <div className="client-list">
-                  {[["Jasmine Reed","Knotless Braids","5 visits","Aug 18","J"],["Tia Moore","Retwist & Style","8 visits","Aug 11","T"],["Monique Lewis","Loc consultation","New client","Jul 31","M"],["Aaliyah Price","Box Braids","3 visits","Sep 02","A"]].filter(x=>x[0].toLowerCase().includes(clientQuery.toLowerCase())).map((client,i)=><button key={client[0]} className={i===0?"active":""}><span className="client-photo">{client[4]}</span><span><strong>{client[0]}</strong><small>{client[1]} · {client[2]}</small></span><em>Next {client[3]} ›</em></button>)}
+                  {productionClients.filter(client=>client.name.toLowerCase().includes(clientQuery.toLowerCase())).map(client=><button key={client.id} className={selectedClient?.id===client.id?"active":""} onClick={()=>{setSelectedClientId(client.id);setClientNoteDraft(client.notes||"")}}><span className="client-photo">{client.name[0]}</span><span><strong>{client.name}</strong><small>{client.visit_count ? `${client.visit_count} visits` : "New client"} · {(client.photos || []).length} photos</small></span><em>{client.last_visit_at ? `Last ${new Date(client.last_visit_at).toLocaleDateString()}` : "No completed visit"} ›</em></button>)}
+                  {!productionClients.length&&<div className="empty-client-book"><strong>No clients yet</strong><p>Create the first real appointment and Veya will build the client record automatically.</p></div>}
                 </div>
-                <aside className="client-detail"><div className="client-detail-top"><span className="client-photo large">J</span><div><small>CLIENT SINCE 2024</small><h3>Jasmine Reed</h3><p>(716) 555-0186 · jasmine@email.com</p></div><button onClick={()=>flash("Message composer opened.")}>Message</button></div>
-                  <div className="client-metrics"><div><span>VISITS</span><strong>5</strong></div><div><span>LIFETIME VALUE</span><strong>$1,120</strong></div><div><span>NO-SHOWS</span><strong>0</strong></div></div>
-                  <div className="client-note"><span>PRIVATE NOTE</span><p>Prefers medium waist-length braids, color 1B. Sensitive edges—keep front sections light.</p><button onClick={()=>flash("Client note editor opened.")}>Edit note</button></div>
-                  <div className="client-history"><span>RECENT HISTORY</span><article><b>Jul 28</b><div><strong>Knotless Braids</strong><small>Confirmed · $220 · $30 deposit paid</small></div></article><article><b>May 16</b><div><strong>Take-down + wash</strong><small>Completed · $85</small></div></article></div>
-                </aside>
+                {selectedClient?<aside className="client-detail"><div className="client-detail-top"><span className="client-photo large">{selectedClient.name[0]}</span><div><small>PRIVATE CLIENT RECORD</small><h3>{selectedClient.name}</h3><p>{selectedClient.phone || "No phone"} · {selectedClient.email || "No email"}</p></div><label className="client-photo-upload"><input type="file" accept="image/*" disabled={uploadingPhoto} onChange={event=>void uploadClientPhoto(event.target.files?.[0])}/>{uploadingPhoto?"Uploading…":"＋ Add photo"}</label></div>
+                  <div className="client-metrics"><div><span>VISITS</span><strong>{selectedClient.visit_count}</strong></div><div><span>APPOINTMENTS</span><strong>{selectedClientHistory.length}</strong></div><div><span>PHOTOS</span><strong>{(selectedClient.photos || []).length}</strong></div></div>
+                  <div className="client-note"><span>PRIVATE NOTE</span><textarea value={clientNoteDraft} onChange={event=>setClientNoteDraft(event.target.value)} placeholder="Preferences, sensitivities, formulas, and care notes…"/><button disabled={saving} onClick={()=>void saveClientNote()}>{saving?"Saving…":"Save note"}</button></div>
+                  {(selectedClient.photos || []).length>0&&<div className="client-photo-records"><span>PRIVATE PHOTOS</span><div>{selectedClient.photos!.map(photo=><article key={photo.id}><i>▧</i><strong>{photo.purpose}</strong><small>Stored privately</small></article>)}</div></div>}
+                  <div className="client-history"><span>APPOINTMENT HISTORY</span>{selectedClientHistory.map(appointment=><article key={appointment.id}><b>{appointment.appointment_date}</b><div><strong>{appointment.service_name}</strong><small>{appointment.status.replace("_"," ")} · {appointment.start_time}</small></div></article>)}{!selectedClientHistory.length&&<p>No appointments saved for this client yet.</p>}</div>
+                </aside>:<aside className="client-detail empty-detail"><strong>Select or create a client</strong><p>Private notes, photos, and appointment history will appear here.</p></aside>}
               </div>
             </section>}
             {dashTab === "Automations" && <section className="essentials-workspace">
