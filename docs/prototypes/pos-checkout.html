@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookKit — Checkout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plum:#2c2130;--mauve:#6f5872;--mauve2:#5a4560;--clay:#c69b78;--clay-deep:#a97f58;
+    --cream:#f4efe9;--muted:#b9a9bd;--muted2:#8d7d91;--line:rgba(255,255,255,.09);
+    --line-solid:#4a3a50;--good:#7fc9a2;--star:#e3b84e;--pop:#e08a6a;--danger:#e08a8a;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:#1c141f;color:var(--cream);-webkit-font-smoothing:antialiased;line-height:1.45;padding:18px}
+  @media(max-width:640px){body{padding:8px}}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  .app{max-width:1080px;margin:0 auto;background:linear-gradient(180deg,#332638,#2a1f2f);border:1px solid var(--line-solid);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+
+  .tabs{display:flex;align-items:center;gap:2px;background:#241a29;padding:8px 12px 0;border-bottom:1px solid var(--line-solid);overflow-x:auto}
+  .tab{padding:8px 16px;font-size:12.5px;color:var(--muted);border-radius:9px 9px 0 0;white-space:nowrap}
+  .tab.on{background:linear-gradient(180deg,#3d2e44,#332639);color:var(--cream);font-weight:600}
+
+  .cmd{display:flex;align-items:center;gap:12px;padding:12px 18px;background:#1f1622;border-bottom:1px solid var(--line-solid)}
+  .wordmark{font-family:'Space Grotesk';font-weight:700;font-size:19px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+  .wordmark .m{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--clay),var(--mauve));display:grid;place-items:center;color:#fff;font-size:14px}
+  .processor{margin-left:auto;font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:7px;background:#2c2130;border:1px solid var(--line-solid);padding:6px 11px;border-radius:100px}
+  .processor .g{width:7px;height:7px;border-radius:50%;background:var(--good)}
+  .processor b{color:var(--cream)}
+
+  .head{display:flex;align-items:center;gap:12px;padding:16px 20px 2px;flex-wrap:wrap}
+  .head h1{font-family:'Space Grotesk';font-size:20px;font-weight:600}
+  .head .prof{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}
+  .head .prof select{background:#2c2130;border:1px solid var(--line-solid);color:var(--cream);border-radius:9px;padding:5px 9px;font-family:inherit;font-size:12px}
+
+  .grid{display:grid;grid-template-columns:1fr 380px;gap:14px;padding:14px 20px 20px}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+  /* left: builder */
+  .panel{background:linear-gradient(160deg,#3a2b42,#2b2032);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .panel h3{font-family:'Space Grotesk';font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+  .client-row{display:flex;align-items:center;gap:11px;background:rgba(0,0,0,.16);border:1px solid var(--line);border-radius:11px;padding:11px 13px;margin-bottom:14px}
+  .client-row .av{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--mauve),var(--mauve2));display:grid;place-items:center;font-weight:700;font-size:15px}
+  .client-row .nm{font-weight:600;font-size:14px}
+  .client-row .sub{font-size:11.5px;color:var(--muted)}
+  .client-row .cof{margin-left:auto;font-size:10.5px;background:rgba(127,201,162,.14);color:var(--good);padding:4px 9px;border-radius:100px;font-weight:600}
+
+  .add-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}
+  @media(max-width:640px){.add-grid{grid-template-columns:repeat(2,1fr)}}
+  .add-tile{background:rgba(255,255,255,.03);border:1px solid var(--line-solid);border-radius:10px;padding:11px 10px;text-align:left;transition:.12s;position:relative}
+  .add-tile:hover{border-color:var(--clay);background:rgba(198,155,120,.07)}
+  .add-tile .an{font-weight:600;font-size:12.5px}
+  .add-tile .ap{font-size:11px;color:var(--muted);margin-top:2px}
+  .add-tile.retail .an::before{content:"🛍 ";font-size:10px}
+  .seg{display:flex;gap:6px;margin-bottom:12px}
+  .seg button{flex:1;padding:7px;border-radius:8px;border:1px solid var(--line-solid);background:rgba(255,255,255,.03);font-size:12px;font-weight:600;color:var(--muted)}
+  .seg button.on{background:var(--clay);color:#2c1a10;border-color:transparent}
+
+  /* right: cart */
+  .cart{background:linear-gradient(160deg,#3c2c44,#281d31);border:1px solid var(--line);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column}
+  .line{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .line .li-main{flex:1;min-width:0}
+  .line .li-nm{font-weight:600;font-size:13.5px}
+  .line .li-by{font-size:11px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:5px}
+  .line .li-by select{background:#2c2130;border:1px solid var(--line-solid);color:var(--cream);border-radius:6px;padding:2px 6px;font-family:inherit;font-size:10.5px}
+  .line .li-amt{font-family:'Space Grotesk';font-weight:600;font-size:13.5px}
+  .line .li-x{color:var(--muted2);font-size:13px;padding:2px 4px}
+  .line .li-x:hover{color:var(--danger)}
+  .empty-cart{text-align:center;color:var(--muted2);font-size:12.5px;padding:24px 10px}
+
+  .tip-block{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .tip-head{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;display:flex;justify-content:space-between}
+  .tip-opts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+  .tip-opts button{padding:9px 4px;border-radius:9px;border:1px solid var(--line-solid);background:rgba(255,255,255,.03);font-size:12.5px;font-weight:600;text-align:center;transition:.12s}
+  .tip-opts button .pct{display:block;font-size:10px;color:var(--muted);font-weight:500}
+  .tip-opts button.on{background:var(--clay);color:#2c1a10;border-color:transparent}
+  .tip-opts button.on .pct{color:#3a2418}
+  .tip-split{font-size:11px;color:var(--muted);background:rgba(0,0,0,.16);border-radius:8px;padding:8px 10px;margin-bottom:4px}
+  .tip-split .r{display:flex;justify-content:space-between;padding:2px 0}
+  .tip-split .r b{color:var(--cream);font-weight:600}
+  .custom-tip{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--line-solid);border-radius:8px;padding:8px 11px;color:var(--cream);font-family:inherit;font-size:13px;outline:none;margin-top:4px}
+
+  .totals{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13px}
+  .totals .tr{display:flex;justify-content:space-between;padding:3px 0;color:var(--muted)}
+  .totals .tr.grand{color:var(--cream);font-weight:700;font-size:17px;font-family:'Space Grotesk';padding-top:8px;margin-top:4px;border-top:1px solid var(--line)}
+
+  .pay-head{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 8px}
+  .tender{display:flex;flex-direction:column;gap:7px}
+  .tender-btn{display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:11px;border:1px solid var(--line-solid);background:rgba(255,255,255,.03);font-size:13.5px;font-weight:600;transition:.12s;text-align:left}
+  .tender-btn:hover{border-color:var(--clay)}
+  .tender-btn .ic{font-size:16px}
+  .tender-btn .sub{font-size:11px;color:var(--muted);font-weight:500;margin-top:1px}
+  .tender-btn.primary{background:linear-gradient(160deg,var(--clay),var(--clay-deep));color:#2c1a10;border-color:transparent;justify-content:center}
+  .split-toggle{font-size:11.5px;color:var(--clay);text-align:center;margin-top:8px;cursor:pointer}
+  .split-toggle:hover{text-decoration:underline}
+
+  /* split tender panel */
+  .split-panel{background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:11px;padding:12px;margin-top:8px;display:none}
+  .split-panel.on{display:block}
+  .split-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .split-row label{font-size:12px;width:60px;color:var(--muted)}
+  .split-row input{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--line-solid);border-radius:8px;padding:8px 10px;color:var(--cream);font-family:inherit;font-size:13px;outline:none}
+  .split-status{font-size:11.5px;text-align:center;padding:4px}
+  .split-status.ok{color:var(--good)} .split-status.off{color:var(--pop)}
+
+  /* walk-in queue */
+  .queue{margin-top:14px}
+  .q-list{display:flex;flex-direction:column;gap:6px}
+  .q-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:12.5px}
+  .q-item .q-turn{width:22px;height:22px;border-radius:6px;background:var(--mauve);display:grid;place-items:center;font-weight:700;font-size:11px;flex-shrink:0}
+  .q-item.next .q-turn{background:var(--clay);color:#2c1a10}
+  .q-item .q-nm{font-weight:600}
+  .q-item .q-st{font-size:10.5px;color:var(--muted)}
+  .q-item .q-act{margin-left:auto;font-size:10.5px;color:var(--clay);font-weight:600}
+  .q-item.next{border-color:var(--clay)}
+
+  /* success */
+  .done-bg{position:fixed;inset:0;background:rgba(10,6,12,.6);opacity:0;pointer-events:none;transition:.2s;z-index:30;backdrop-filter:blur(3px)}
+  .done-bg.show{opacity:1;pointer-events:auto}
+  .done{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%) scale(.97);width:min(400px,94vw);background:linear-gradient(180deg,#3a2b42,#2b2032);border:1px solid var(--line-solid);border-radius:18px;padding:22px;z-index:31;opacity:0;transition:.22s;text-align:center}
+  .done.show{transform:translate(-50%,-50%) scale(1);opacity:1}
+  .done .big{width:64px;height:64px;border-radius:50%;background:rgba(127,201,162,.15);display:grid;place-items:center;font-size:30px;color:var(--good);margin:0 auto 14px}
+  .done h3{font-family:'Space Grotesk';font-size:19px;margin-bottom:4px}
+  .done .amt{font-family:'Space Grotesk';font-size:28px;font-weight:700;color:var(--clay);margin:6px 0}
+  .done p{font-size:12.5px;color:var(--muted)}
+  .done .recap{background:rgba(0,0,0,.18);border-radius:10px;padding:12px;margin:14px 0;text-align:left;font-size:12px}
+  .done .recap .r{display:flex;justify-content:space-between;padding:3px 0}
+  .done .recap .r .l{color:var(--muted)}
+  .done .actions{display:flex;gap:8px}
+  .done .actions button{flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid var(--line-solid)}
+  .done .actions .rebook{background:linear-gradient(160deg,var(--clay),var(--clay-deep));color:#2c1a10;border-color:transparent}
+
+  .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);background:#1a1220;border:1px solid var(--line-solid);color:var(--cream);padding:11px 17px;border-radius:12px;font-size:13px;box-shadow:0 16px 40px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:.24s;z-index:40}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast b{color:var(--clay)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tabs">
+    <div class="tab">Booking Desk</div>
+    <div class="tab on">Checkout</div>
+    <div class="tab">Clients</div>
+    <div class="tab">Reports</div>
+  </div>
+  <div class="cmd">
+    <div class="wordmark"><span class="m">✦</span>BookKit</div>
+    <div class="processor"><span class="g"></span>Processor: <b id="procName">Stripe</b> · bring-your-own</div>
+  </div>
+
+  <div class="head">
+    <h1>Checkout</h1>
+    <div class="prof">
+      Viewing as
+      <select id="prof">
+        <option value="barber">Barber shop</option>
+        <option value="salon">Hair salon</option>
+        <option value="nail">Nail studio</option>
+        <option value="spa">Spa</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h3>Ring up <span style="font-weight:500;color:var(--muted2);text-transform:none;letter-spacing:0">appointment + extras</span></h3>
+      <div class="client-row">
+        <div class="av" id="clAv">J</div>
+        <div><div class="nm" id="clNm">Jordan Powell</div><div class="sub" id="clSub">2:30 PM · returning client</div></div>
+        <div class="cof">💳 Card on file</div>
+      </div>
+
+      <div class="seg" id="catSeg">
+        <button data-c="service" class="on">Services</button>
+        <button data-c="addon">Add-ons</button>
+        <button data-c="retail">Retail</button>
+      </div>
+      <div class="add-grid" id="addGrid"></div>
+
+      <div class="queue">
+        <h3 style="margin-top:6px">Walk-in queue <span style="font-weight:500;color:var(--muted2);text-transform:none;letter-spacing:0">fair turn rotation</span></h3>
+        <div class="q-list" id="queue"></div>
+      </div>
+    </div>
+
+    <div class="cart">
+      <h3>Cart</h3>
+      <div id="lines"></div>
+
+      <div class="tip-block" id="tipBlock">
+        <div class="tip-head"><span>Tip</span><span id="tipTotal">$0.00</span></div>
+        <div class="tip-opts" id="tipOpts"></div>
+        <input class="custom-tip" id="customTip" placeholder="Custom tip amount" inputmode="decimal">
+        <div class="tip-split" id="tipSplit" style="display:none"></div>
+      </div>
+
+      <div class="totals" id="totals"></div>
+
+      <div class="pay-head">Payment</div>
+      <div class="tender" id="tender">
+        <button class="tender-btn primary" id="payCard">Charge card · <span id="payAmt">$0.00</span></button>
+        <button class="tender-btn" id="payCash"><span class="ic">💵</span><span>Cash<span class="sub">Opens drawer, calc change</span></span></button>
+        <button class="tender-btn" id="payCof"><span class="ic">💳</span><span>Card on file<span class="sub">Tokenized · one tap</span></span></button>
+      </div>
+      <div class="split-toggle" id="splitToggle">＋ Split tender (e.g. card for service, cash tip)</div>
+      <div class="split-panel" id="splitPanel">
+        <div class="split-row"><label>Card</label><input id="splitCard" inputmode="decimal" placeholder="0.00"></div>
+        <div class="split-row"><label>Cash</label><input id="splitCash" inputmode="decimal" placeholder="0.00"></div>
+        <div class="split-status off" id="splitStatus"></div>
+        <button class="tender-btn primary" id="paySplit" style="margin-top:4px">Complete split payment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="done-bg" id="doneBg"></div>
+<div class="done" id="done"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const PROFILES={
+  barber:{staff:["Marcus","Dre","Tay"],client:["Jordan Powell","2:30 PM · returning client"],commission:0.4,
+    service:[["Skin fade",40],["Line-up",20],["Beard trim",30],["Kids cut",25]],
+    addon:[["Hot towel",8],["Beard oil",12],["Design/part",10]],
+    retail:[["Pomade",18],["Beard balm",22],["Shampoo",16]],
+    queue:[["Walk-in · Ray",true,"waiting 4m"],["Walk-in · Sam",false,"waiting 9m"]]},
+  salon:{staff:["Nia","Rae","Mel"],client:["Aisha Bell","booked · balayage"],commission:0.45,
+    service:[["Balayage",220],["Blowout",50],["Gloss + trim",75],["Highlights",140]],
+    addon:[["Bond treatment",35],["Deep condition",20],["Toner",25]],
+    retail:[["Shampoo",28],["Hair oil",34],["Heat spray",24]],
+    queue:[["Walk-in · Gina",true,"waiting 6m"]]},
+  nail:{staff:["Kim","Vee","Lu"],client:["Bri King","gel set + art"],commission:0.5,
+    service:[["Gel set",55],["Acrylic full",80],["Fill-in",35],["Pedicure",55]],
+    addon:[["Nail art",15],["Removal",15],["Chrome",12]],
+    retail:[["Cuticle oil",14],["Top coat",12],["Hand cream",16]],
+    queue:[["Walk-in · Dana",true,"waiting 3m"],["Walk-in · Sofia",false,"waiting 8m"],["Walk-in · Mia",false,"waiting 12m"]]},
+  spa:{staff:["Ivy","Sol","Rob"],client:["Grace Lee","signature facial"],commission:0.4,
+    service:[["Signature facial",120],["Chemical peel",150],["Dermaplaning",90],["Waxing",45]],
+    addon:[["LED add-on",30],["Eye treatment",25],["Extraction",20]],
+    retail:[["Serum",48],["Cleanser",32],["SPF",28]],
+    queue:[]},
+};
+const TAX=0.07;
+
+let curKey='barber', cat='service', cart=[], tipMode='20', customTipVal=0, splitOn=false;
+
+function money(n){return '$'+n.toFixed(2);}
+function P(){return PROFILES[curKey];}
+
+function loadProf(){
+  const p=P();
+  document.getElementById('clNm').textContent=p.client[0];
+  document.getElementById('clSub').textContent=p.client[1];
+  document.getElementById('clAv').textContent=p.client[0][0];
+  // seed cart with the appointment's service
+  cart=[{name:p.service[0][0],price:p.service[0][1],by:p.staff[0],type:'service'}];
+  tipMode='20';customTipVal=0;splitOn=false;
+  document.getElementById('splitPanel').classList.remove('on');
+  renderAll();
+}
+
+function renderCatalog(){
+  const items=P()[cat];
+  document.getElementById('addGrid').innerHTML=items.map((it,i)=>
+    `<button class="add-tile ${cat==='retail'?'retail':''}" data-i="${i}"><div class="an">${it[0]}</div><div class="ap">${money(it[1])}${cat==='service'?' · '+P().staff[0]:''}</div></button>`
+  ).join('');
+  document.querySelectorAll('#addGrid .add-tile').forEach(t=>t.onclick=()=>{
+    const it=items[+t.dataset.i];
+    cart.push({name:it[0],price:it[1],by:cat==='retail'?null:P().staff[0],type:cat});
+    renderAll();
+    toast(`Added <b>${it[0]}</b>`);
+  });
+}
+
+function renderCart(){
+  const el=document.getElementById('lines');
+  if(!cart.length){el.innerHTML='<div class="empty-cart">Cart is empty. Add a service to start.</div>';return;}
+  el.innerHTML=cart.map((l,i)=>{
+    const staffSel=l.type==='retail'?'<span style="color:var(--muted2)">retail</span>':
+      `<select data-i="${i}" class="by-sel">${P().staff.map(s=>`<option ${s===l.by?'selected':''}>${s}</option>`).join('')}</select>`;
+    return `<div class="line"><div class="li-main"><div class="li-nm">${l.name}</div><div class="li-by">${l.type==='service'?'✂':l.type==='addon'?'＋':'🛍'} by ${staffSel}</div></div><div class="li-amt">${money(l.price)}</div><button class="li-x" data-x="${i}">✕</button></div>`;
+  }).join('');
+  el.querySelectorAll('.by-sel').forEach(s=>s.onchange=()=>{cart[+s.dataset.i].by=s.value;renderCart();renderTipSplit();});
+  el.querySelectorAll('.li-x').forEach(b=>b.onclick=()=>{cart.splice(+b.dataset.x,1);renderAll();});
+}
+
+function subtotal(){return cart.reduce((t,l)=>t+l.price,0);}
+function serviceSubtotal(){return cart.filter(l=>l.type!=='retail').reduce((t,l)=>t+l.price,0);}
+function tipAmount(){
+  if(tipMode==='custom')return customTipVal;
+  if(tipMode==='0')return 0;
+  return +(serviceSubtotal()*(+tipMode/100)).toFixed(2);
+}
+
+function renderTip(){
+  const opts=[['18','18%'],['20','20%'],['25','25%'],['0','None']];
+  document.getElementById('tipOpts').innerHTML=opts.map(o=>
+    `<button data-t="${o[0]}" class="${tipMode===o[0]?'on':''}">${o[1]==='None'?'None':money(+(serviceSubtotal()*(+o[0]/100)))}<span class="pct">${o[1]}</span></button>`
+  ).join('');
+  document.querySelectorAll('#tipOpts button').forEach(b=>b.onclick=()=>{tipMode=b.dataset.t;document.getElementById('customTip').value='';renderAll();});
+  document.getElementById('tipTotal').textContent=money(tipAmount());
+  renderTipSplit();
+}
+function renderTipSplit(){
+  const ts=document.getElementById('tipSplit');
+  const tip=tipAmount();
+  const providers=[...new Set(cart.filter(l=>l.type!=='retail').map(l=>l.by))];
+  if(tip>0&&providers.length>1){
+    // split tip proportional to each provider's service $
+    const byProv={};let base=serviceSubtotal();
+    cart.filter(l=>l.type!=='retail').forEach(l=>{byProv[l.by]=(byProv[l.by]||0)+l.price;});
+    ts.style.display='block';
+    ts.innerHTML='<div style="margin-bottom:4px;color:var(--muted2)">Tip split by service provided:</div>'+
+      providers.map(pv=>`<div class="r"><span>${pv}</span><b>${money(+(tip*byProv[pv]/base).toFixed(2))}</b></div>`).join('');
+  }else if(tip>0&&providers.length===1){
+    ts.style.display='block';
+    ts.innerHTML=`<div class="r"><span>Tip to</span><b>${providers[0]}</b></div>`;
+  }else ts.style.display='none';
+}
+
+function renderTotals(){
+  const sub=subtotal(),tip=tipAmount(),tax=+(sub*TAX).toFixed(2),grand=+(sub+tax+tip).toFixed(2);
+  document.getElementById('totals').innerHTML=`
+    <div class="tr"><span>Subtotal</span><span>${money(sub)}</span></div>
+    <div class="tr"><span>Tax (7%)</span><span>${money(tax)}</span></div>
+    <div class="tr"><span>Tip</span><span>${money(tip)}</span></div>
+    <div class="tr grand"><span>Total</span><span>${money(grand)}</span></div>`;
+  document.getElementById('payAmt').textContent=money(grand);
+  document.getElementById('payCard').innerHTML='Charge card · <span id="payAmt">'+money(grand)+'</span>';
+  document.getElementById('payCard').onclick=()=>complete('Card');
+  updateSplit();
+}
+
+function renderQueue(){
+  const q=P().queue;
+  const el=document.getElementById('queue');
+  if(!q.length){el.innerHTML='<div class="empty-cart" style="padding:12px">No one waiting.</div>';return;}
+  el.innerHTML=q.map((w,i)=>
+    `<div class="q-item ${w[1]?'next':''}"><div class="q-turn">${i+1}</div><div><div class="q-nm">${w[0]}</div><div class="q-st">${w[2]}</div></div>${w[1]?'<div class="q-act">NEXT UP →</div>':'<div class="q-act" style="color:var(--muted2)">assign</div>'}</div>`
+  ).join('');
+  el.querySelectorAll('.q-item').forEach((it,i)=>it.onclick=()=>toast(`Assigning <b>${q[i][0]}</b> to next free chair`));
+}
+
+function grand(){return +(subtotal()+subtotal()*TAX+tipAmount()).toFixed(2);}
+
+function updateSplit(){
+  const g=grand();
+  const card=parseFloat(document.getElementById('splitCard').value)||0;
+  const cash=parseFloat(document.getElementById('splitCash').value)||0;
+  const sum=+(card+cash).toFixed(2);
+  const st=document.getElementById('splitStatus');
+  if(Math.abs(sum-g)<0.01){st.className='split-status ok';st.textContent=`✓ ${money(sum)} of ${money(g)} — balanced`;}
+  else{st.className='split-status off';st.textContent=`${money(sum)} of ${money(g)} · ${money(g-sum)} remaining`;}
+}
+
+function renderAll(){renderCatalog();renderCart();renderTip();renderTotals();renderQueue();}
+
+function complete(method){
+  const g=grand(),tip=tipAmount();
+  const providers=[...new Set(cart.filter(l=>l.type!=='retail').map(l=>l.by))];
+  const comm=P().commission;
+  // commission recap (service $ only)
+  const svcTotal=serviceSubtotal();
+  const commByProv={};
+  cart.filter(l=>l.type!=='retail').forEach(l=>{commByProv[l.by]=(commByProv[l.by]||0)+l.price*comm;});
+  const done=document.getElementById('done');
+  done.innerHTML=`
+    <div class="big">✓</div>
+    <h3>Paid · ${method}</h3>
+    <div class="amt">${money(g)}</div>
+    <p>Receipt sent · appointment marked complete</p>
+    <div class="recap">
+      <div class="r"><span class="l">Tip (${providers.join(', ')})</span><span>${money(tip)}</span></div>
+      ${Object.entries(commByProv).map(([p,c])=>`<div class="r"><span class="l">${p} commission (${Math.round(comm*100)}%)</span><span>${money(+c.toFixed(2))}</span></div>`).join('')}
+      <div class="r"><span class="l">Deposit into ${document.getElementById('procName').textContent}</span><span>next business day</span></div>
+    </div>
+    <div class="actions">
+      <button id="newSale">New sale</button>
+      <button class="rebook" id="rebook">Rebook client</button>
+    </div>`;
+  document.getElementById('doneBg').classList.add('show');
+  done.classList.add('show');
+  document.getElementById('newSale').onclick=()=>{closeDone();loadProf();};
+  document.getElementById('rebook').onclick=()=>{toast('Opening <b>booking calendar</b> to rebook');};
+}
+function closeDone(){document.getElementById('done').classList.remove('show');document.getElementById('doneBg').classList.remove('show');}
+document.getElementById('doneBg').onclick=closeDone;
+
+// wiring
+document.getElementById('prof').onchange=e=>{curKey=e.target.value;cat='service';document.querySelectorAll('#catSeg button').forEach(b=>b.classList.toggle('on',b.dataset.c==='service'));loadProf();};
+document.querySelectorAll('#catSeg button').forEach(b=>b.onclick=()=>{cat=b.dataset.c;document.querySelectorAll('#catSeg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');renderCatalog();});
+document.getElementById('customTip').addEventListener('input',e=>{const v=parseFloat(e.target.value);if(!isNaN(v)){tipMode='custom';customTipVal=v;}else{tipMode='20';}renderTip();renderTotals();});
+document.getElementById('payCash').onclick=()=>complete('Cash');
+document.getElementById('payCof').onclick=()=>complete('Card on file');
+document.getElementById('splitToggle').onclick=()=>{const p=document.getElementById('splitPanel');splitOn=!splitOn;p.classList.toggle('on',splitOn);if(splitOn){document.getElementById('splitCard').value=(grand()-0).toFixed(2);updateSplit();}};
+['splitCard','splitCash'].forEach(id=>document.getElementById(id).addEventListener('input',updateSplit));
+document.getElementById('paySplit').onclick=()=>{
+  const card=parseFloat(document.getElementById('splitCard').value)||0;
+  const cash=parseFloat(document.getElementById('splitCash').value)||0;
+  if(Math.abs(card+cash-grand())<0.01)complete(`Split · ${money(card)} card + ${money(cash)} cash`);
+  else toast('Split must equal the total');
+};
+
+let toastEl=document.getElementById('toast');
+function toast(m){toastEl.innerHTML=m;toastEl.classList.add('show');clearTimeout(toastEl._t);toastEl._t=setTimeout(()=>toastEl.classList.remove('show'),2400);}
+
+loadProf();
+</script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookKit — Front Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* palette pulled from the reference: plum / mauve / clay / cream */
+    --plum:#2c2130; --plum2:#3a2c40; --mauve:#6f5872; --mauve2:#5a4560;
+    --clay:#c69b78; --clay2:#b78a63; --clay-deep:#a97f58;
+    --cream:#f4efe9; --ink:#231a27; --muted:#b9a9bd; --muted2:#8d7d91;
+    --line:rgba(255,255,255,.09); --line-solid:#4a3a50;
+    --good:#7fc9a2; --star:#e3b84e;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:#1c141f;color:var(--cream);-webkit-font-smoothing:antialiased;line-height:1.45;padding:20px}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+  .app{max-width:1080px;margin:0 auto;background:linear-gradient(180deg,#332638,#2a1f2f);border:1px solid var(--line-solid);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+
+  /* tab strip */
+  .tabs{display:flex;align-items:center;gap:2px;background:#241a29;padding:8px 12px 0;border-bottom:1px solid var(--line-solid)}
+  .tab{padding:8px 16px;font-size:12.5px;color:var(--muted);border-radius:9px 9px 0 0;display:flex;align-items:center;gap:8px}
+  .tab.on{background:linear-gradient(180deg,#3d2e44,#332639);color:var(--cream);font-weight:600}
+  .tab .x{opacity:.4;font-size:11px}
+
+  /* command bar */
+  .cmd{display:flex;align-items:center;gap:14px;padding:12px 18px;background:#1f1622;border-bottom:1px solid var(--line-solid)}
+  .wordmark{font-family:'Space Grotesk';font-weight:700;font-size:20px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+  .wordmark .m{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--clay),var(--mauve));display:grid;place-items:center;color:#fff;font-size:14px}
+  .ask{flex:1;background:#2c2130;border:1px solid var(--line-solid);border-radius:100px;padding:10px 18px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .ask input{flex:1;background:none;border:none;outline:none;color:var(--cream);font-family:inherit;font-size:14px}
+  .ask input::placeholder{color:var(--muted2)}
+  .cmd-ic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--muted);font-size:14px;border:1px solid var(--line-solid)}
+  .biz-pill{font-size:12.5px;color:var(--cream);background:#2c2130;border:1px solid var(--line-solid);padding:7px 12px;border-radius:100px;display:flex;align-items:center;gap:8px}
+  .biz-pill .av{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#3b2fd6,#7c6cf5);display:grid;place-items:center;font-size:10px;font-weight:700}
+
+  /* front desk header */
+  .fd-head{display:flex;align-items:center;gap:12px;padding:20px 22px 4px}
+  .fd-head h1{font-family:'Space Grotesk';font-size:22px;font-weight:600;letter-spacing:-.01em}
+  .fd-head .sync{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--muted2);display:grid;place-items:center;font-size:11px;color:var(--muted);cursor:pointer;transition:.3s}
+  .fd-head .sync:hover{transform:rotate(180deg);color:var(--clay)}
+  .fd-head .prof{margin-left:auto;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .fd-head .prof select{background:#2c2130;border:1px solid var(--line-solid);color:var(--cream);border-radius:9px;padding:6px 10px;font-family:inherit;font-size:12.5px}
+
+  /* the tile grid */
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 22px 24px}
+  @media(max-width:820px){.grid{grid-template-columns:repeat(2,1fr)}}
+  .tile{border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;min-height:118px;display:flex;flex-direction:column;transition:transform .14s, box-shadow .14s;border:1px solid var(--line)}
+  .tile:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.35)}
+  .tile.act{cursor:pointer}
+
+  /* icon tiles (clay + mauve variants) */
+  .t-clay{background:linear-gradient(160deg,var(--clay),var(--clay-deep))}
+  .t-clay .lbl,.t-clay .ic{color:#3a2418}
+  .t-mauve{background:linear-gradient(160deg,var(--mauve),var(--mauve2))}
+  .ic{font-size:22px;margin-bottom:auto}
+  .lbl{font-size:13px;font-weight:600;letter-spacing:.01em}
+  .tile .sub-lbl{font-size:11px;opacity:.7;margin-top:2px}
+
+  /* stat tiles */
+  .t-stat{background:linear-gradient(160deg,#3f2f46,#342640)}
+  .t-stat .k{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .t-stat .v{font-family:'Space Grotesk';font-size:34px;font-weight:700;margin-top:auto;letter-spacing:-.02em}
+  .t-stat .v small{font-size:15px;color:var(--muted);font-weight:600}
+  .t-stat .trend{font-size:11px;font-weight:600;margin-top:3px}
+  .trend.up{color:var(--good)} .trend.down{color:#e08a8a}
+
+  /* wide hero tile: today's flow (replaces the photo) */
+  .t-hero{grid-column:span 2;grid-row:span 2;background:
+     radial-gradient(120% 120% at 90% 0%, rgba(198,155,120,.25), transparent 55%),
+     linear-gradient(160deg,#41304a,#2c2033);display:flex;flex-direction:column;padding:18px}
+  .t-hero .h-top{display:flex;align-items:center;justify-content:space-between}
+  .t-hero .h-top .t{font-family:'Space Grotesk';font-size:14px;font-weight:600}
+  .t-hero .h-top .live{font-size:10.5px;color:var(--good);display:flex;align-items:center;gap:5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .t-hero .h-top .live i{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 rgba(127,201,162,.6);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(127,201,162,.5)}70%{box-shadow:0 0 0 7px rgba(127,201,162,0)}100%{box-shadow:0 0 0 0 rgba(127,201,162,0)}}
+  .next-up{margin-top:14px;background:rgba(0,0,0,.18);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;align-items:center;gap:13px}
+  .next-up .when{text-align:center;flex-shrink:0}
+  .next-up .when .hm{font-family:'Space Grotesk';font-size:20px;font-weight:700}
+  .next-up .when .mins{font-size:10px;color:var(--clay);font-weight:600}
+  .next-up .who .n{font-weight:600;font-size:14px}
+  .next-up .who .s{font-size:12px;color:var(--muted)}
+  .next-up .chair{margin-left:auto;font-size:11px;color:var(--muted);text-align:right}
+  .timeline{margin-top:12px;display:flex;flex-direction:column;gap:7px;overflow-y:auto}
+  .apt{display:flex;align-items:center;gap:11px;font-size:12.5px;padding:7px 9px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid transparent;transition:.12s}
+  .apt:hover{border-color:var(--line);background:rgba(255,255,255,.06)}
+  .apt .tm{font-family:'Space Grotesk';font-weight:600;color:var(--clay);width:52px;flex-shrink:0}
+  .apt .nm{font-weight:500}
+  .apt .sv{color:var(--muted);margin-left:4px}
+  .apt .tag{margin-left:auto;font-size:10px;padding:2px 8px;border-radius:100px;font-weight:600}
+  .tag.conf{background:rgba(127,201,162,.15);color:var(--good)}
+  .tag.new{background:rgba(227,184,78,.15);color:var(--star)}
+  .tag.walk{background:rgba(198,155,120,.18);color:var(--clay)}
+
+  /* ratings tile */
+  .t-rate{background:linear-gradient(160deg,#4a2f4e,#382a44)}
+  .t-rate .k{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .stars{color:var(--star);font-size:17px;letter-spacing:2px;margin-top:8px}
+  .t-rate .cap{font-size:11px;color:var(--muted);margin-top:2px}
+  .t-rate .big{font-family:'Space Grotesk';font-size:30px;font-weight:700;margin-top:auto;align-self:flex-end}
+
+  /* revenue tile - clay, wide */
+  .t-rev{background:linear-gradient(160deg,var(--clay),var(--clay-deep));grid-column:span 2}
+  .t-rev .k{font-size:11px;font-weight:700;color:#3a2418;text-transform:uppercase;letter-spacing:.05em;opacity:.8}
+  .t-rev .v{font-family:'Space Grotesk';font-size:38px;font-weight:700;color:#2c1a10;margin-top:auto;letter-spacing:-.02em}
+  .t-rev .bar{margin-top:10px;height:6px;border-radius:3px;background:rgba(58,36,24,.25);overflow:hidden}
+  .t-rev .bar i{display:block;height:100%;width:72%;background:#3a2418;border-radius:3px}
+  .t-rev .goal{font-size:11px;color:#3a2418;opacity:.75;margin-top:6px;font-weight:600}
+
+  .carousel-dots{display:flex;gap:6px;justify-content:center;padding:0 0 18px}
+  .carousel-dots i{width:6px;height:6px;border-radius:50%;background:var(--muted2);opacity:.5}
+  .carousel-dots i.on{opacity:1;background:var(--clay);width:16px;border-radius:3px}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);background:#1a1220;border:1px solid var(--line-solid);color:var(--cream);padding:12px 18px;border-radius:12px;font-size:13px;box-shadow:0 16px 40px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:.24s;z-index:20}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast b{color:var(--clay)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tabs">
+    <div class="tab on">Front Desk <span class="x">●</span></div>
+    <div class="tab">Appointment Book <span class="x">✕</span></div>
+    <div class="tab">Clients <span class="x">✕</span></div>
+    <div class="tab">Reports <span class="x">✕</span></div>
+  </div>
+
+  <div class="cmd">
+    <div class="wordmark"><span class="m">✦</span>BookKit</div>
+    <div class="ask">
+      <span>⌘</span>
+      <input id="ask" placeholder="Tell BookKit what you want to do…">
+    </div>
+    <div class="cmd-ic">?</div>
+    <div class="cmd-ic">🔍</div>
+    <div class="biz-pill"><span class="av">M</span> Marcus · Owner</div>
+  </div>
+
+  <div class="fd-head">
+    <h1>Front Desk</h1>
+    <button class="sync" id="sync" title="Refresh">⟳</button>
+    <div class="prof">
+      Viewing as
+      <select id="prof">
+        <option value="barber">Barber shop</option>
+        <option value="salon">Hair salon</option>
+        <option value="nail">Nail studio</option>
+        <option value="tattoo">Tattoo studio</option>
+        <option value="spa">Spa</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="carousel-dots"><i class="on"></i><i></i><i></i><i></i></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PROFILES={
+  barber:{svc1:"Skin Fade + Beard",svc2:"Line-up",people:[["Skin Fade","Marcus"],["Beard trim","Dre"],["Kids cut","Marcus"],["Line-up","Tay"]],rev:"$3,240",book:"71%",chair:"Chair 2",apts:[
+    ["9:00","Jordan P.","Skin fade","conf"],["9:45","Andre M.","Beard + hot towel","conf"],["10:30","Walk-in","Line-up","walk"],["11:15","Kevin R.","Kids cut","new"],["12:00","Sam T.","Skin fade","conf"]]},
+  salon:{svc1:"Balayage",svc2:"Blowout",people:[["Balayage","Nia"],["Blowout","Rae"],["Gloss","Nia"],["Cut & style","Mel"]],rev:"$5,180",book:"66%",chair:"Station 3",apts:[
+    ["9:00","Aisha B.","Balayage","conf"],["10:30","Tara L.","Highlights","conf"],["12:00","Walk-in","Blowout","walk"],["1:15","Gina F.","Gloss + trim","new"],["2:30","Priya S.","Full color","conf"]]},
+  nail:{svc1:"Gel set",svc2:"Fill-in",people:[["Gel set","Kim"],["Acrylic","Vee"],["Nail art","Kim"],["Pedicure","Lu"]],rev:"$2,090",book:"78%",chair:"Table 1",apts:[
+    ["9:15","Bri K.","Gel set + art","conf"],["10:00","Dana W.","Acrylic full","conf"],["11:00","Walk-in","Fill-in","walk"],["12:30","Sofia R.","Pedicure","new"],["1:45","Mia T.","Chrome set","conf"]]},
+  tattoo:{svc1:"Custom piece",svc2:"Consultation",people:[["Custom","Ink A"],["Fine line","Ink B"],["Cover-up","Ink A"],["Consult","Ink B"]],rev:"$4,650",book:"58%",chair:"Room 2",apts:[
+    ["11:00","Chris D.","Consultation","new"],["12:00","Lena M.","Fine line (2h)","conf"],["2:30","Ray V.","Custom sleeve","conf"],["5:00","Omar H.","Cover-up","conf"],["6:30","Walk-in","Flash","walk"]]},
+  spa:{svc1:"Signature facial",svc2:"Peel",people:[["Facial","Ivy"],["Peel","Sol"],["Waxing","Ivy"],["Massage","Rob"]],rev:"$3,870",book:"69%",chair:"Suite A",apts:[
+    ["9:00","Grace L.","Signature facial","conf"],["10:30","Uma P.","Chemical peel","conf"],["12:00","Nora K.","Dermaplaning","new"],["1:30","Ella R.","Waxing","conf"],["3:00","Hana Y.","Massage 60","conf"]]},
+};
+
+function tile(html,cls,act,onclick){
+  const d=document.createElement('div');
+  d.className='tile '+cls+(act?' act':'');
+  d.innerHTML=html;
+  if(onclick)d.onclick=onclick;
+  return d;
+}
+function toast(msg){const t=document.getElementById('toast');t.innerHTML=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+
+function render(){
+  const p=PROFILES[document.getElementById('prof').value];
+  const g=document.getElementById('grid'); g.innerHTML='';
+
+  // HERO: today's flow (this is what replaces the woman's photo)
+  const apts=p.apts.map(a=>`
+    <div class="apt"><span class="tm">${a[0]}</span><span><span class="nm">${a[1]}</span><span class="sv">· ${a[2]}</span></span><span class="tag ${a[3]}">${a[3]==='conf'?'Confirmed':a[3]==='new'?'New':'Walk-in'}</span></div>`).join('');
+  g.appendChild(tile(`
+    <div class="h-top"><span class="t">Today's flow</span><span class="live"><i></i>Live</span></div>
+    <div class="next-up">
+      <div class="when"><div class="hm">${p.apts[0][0]}</div><div class="mins">up next</div></div>
+      <div class="who"><div class="n">${p.apts[0][1]}</div><div class="s">${p.apts[0][2]}</div></div>
+      <div class="chair">${p.chair}</div>
+    </div>
+    <div class="timeline">${apts}</div>
+  `,'t-hero'));
+
+  // ratings
+  g.appendChild(tile(`
+    <div class="k">Ratings this week</div>
+    <div class="stars">★★★★★</div>
+    <div class="cap">4.9 avg · 23 of 26 reviewed</div>
+    <div class="big">33</div>
+  `,'t-rate act',true,()=>toast('Opening <b>Reviews</b> — 33 ratings this week')));
+
+  // % booked
+  g.appendChild(tile(`
+    <div class="k">Booked today</div>
+    <div class="v">${p.book}</div>
+    <div class="trend up">▲ 6% vs last week</div>
+  `,'t-stat act',true,()=>toast('Opening <b>Appointment Book</b>')));
+
+  // rebooked
+  g.appendChild(tile(`
+    <div class="k">Rebooked today</div>
+    <div class="v">15</div>
+    <div class="trend up">▲ strong retention</div>
+  `,'t-stat act',true,()=>toast('Opening <b>Client retention</b>')));
+
+  // clocked in
+  g.appendChild(tile(`
+    <div class="k">Clocked in</div>
+    <div class="v">8<small> staff</small></div>
+    <div class="trend">2 on break</div>
+  `,'t-stat act',true,()=>toast('Opening <b>Time Clock</b>')));
+
+  // icon tiles row
+  g.appendChild(tile(`<div class="ic">📆</div><div class="lbl">Appointment Book</div><div class="sub-lbl">Manage today's grid</div>`,'t-mauve act',true,()=>toast('Opening <b>Appointment Book</b>')));
+  g.appendChild(tile(`<div class="ic">📣</div><div class="lbl">Marketing</div><div class="sub-lbl">Campaigns & promos</div>`,'t-mauve act',true,()=>toast('Opening <b>Marketing</b>')));
+  g.appendChild(tile(`<div class="ic">📦</div><div class="lbl">Inventory</div><div class="sub-lbl">Products & stock</div>`,'t-clay act',true,()=>toast('Opening <b>Inventory</b>')));
+  g.appendChild(tile(`<div class="ic">🧾</div><div class="lbl">Register</div><div class="sub-lbl">Checkout & POS</div>`,'t-clay act',true,()=>toast('Opening <b>Register</b>')));
+
+  // revenue (wide clay)
+  g.appendChild(tile(`
+    <div class="k">Estimated service sales · this week</div>
+    <div class="v">${p.rev}</div>
+    <div class="bar"><i></i></div>
+    <div class="goal">72% to weekly goal</div>
+  `,'t-rev act',true,()=>toast('Opening <b>Reports</b>')));
+
+  // reports icon
+  g.appendChild(tile(`<div class="ic">📊</div><div class="lbl">Reports</div><div class="sub-lbl">Sales & trends</div>`,'t-mauve act',true,()=>toast('Opening <b>Reports</b>')));
+  g.appendChild(tile(`<div class="ic">⏱️</div><div class="lbl">Time Clock</div><div class="sub-lbl">Staff hours</div>`,'t-mauve act',true,()=>toast('Opening <b>Time Clock</b>')));
+}
+
+document.getElementById('prof').onchange=render;
+document.getElementById('sync').onclick=()=>{render();toast('Front Desk refreshed');};
+document.getElementById('ask').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.target.value.trim()){toast('Got it — routing: <b>'+e.target.value.trim()+'</b>');e.target.value='';}
+});
+render();
+</script>
+</body>
+</html>

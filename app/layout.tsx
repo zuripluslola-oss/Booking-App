@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Veya Booking | Beauty, booked better",
-  description: "Run your calendar, clients, services, team, and online booking page in one beautiful place with Veya.",
+  title: "BookKit | Beauty, booked better",
+  description: "Run your calendar, clients, services, team, and online booking page in one beautiful place with BookKit.",
   other: {
     "codex-preview": "development",
   },

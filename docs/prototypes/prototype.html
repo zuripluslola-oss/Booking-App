@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookKit — Profession-Specific Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14110f; --paper:#faf7f2; --line:#e7e0d6; --muted:#6b6259;
+    --accent:#3b2fd6; --accent2:#ff5a3c; --ok:#1f9d63;
+    --radius:14px; --shadow:0 1px 3px rgba(20,17,15,.06),0 8px 30px rgba(20,17,15,.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+  /* top bar */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 0;border-bottom:1px solid var(--line)}
+  .logo{font-family:'Space Grotesk';font-weight:700;font-size:19px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+  .logo .dot{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:grid;place-items:center;color:#fff;font-size:13px}
+  .steps{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--muted);font-weight:500}
+  .steps .s{padding:5px 11px;border-radius:100px;background:#fff;border:1px solid var(--line)}
+  .steps .s.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .hero{padding:56px 0 26px}
+  .eyebrow{font-family:'Space Grotesk';font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:16px}
+  h1{font-family:'Fraunces';font-weight:600;font-size:clamp(34px,5vw,54px);line-height:1.02;letter-spacing:-.02em;max-width:16ch}
+  h1 em{font-style:italic;color:var(--accent2)}
+  .sub{margin-top:18px;font-size:17px;color:var(--muted);max-width:52ch}
+
+  /* profession grid */
+  .section-label{display:flex;align-items:baseline;gap:12px;margin:38px 0 18px}
+  .section-label h2{font-family:'Space Grotesk';font-size:14px;letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+  .section-label span{font-size:13px;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  @media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+  .card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 16px;text-align:left;transition:transform .16s,box-shadow .16s,border-color .16s;position:relative;overflow:hidden}
+  .card:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:#d6cec2}
+  .card.sel{border-color:var(--ink);box-shadow:var(--shadow)}
+  .card .ic{font-size:24px;margin-bottom:12px;display:block}
+  .card .nm{font-weight:600;font-size:15px;letter-spacing:-.01em}
+  .card .ds{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .card .swatch{position:absolute;top:14px;right:14px;width:14px;height:14px;border-radius:5px}
+
+  .cta-row{margin-top:32px;display:flex;gap:12px;align-items:center}
+  .btn{background:var(--ink);color:#fff;padding:13px 24px;border-radius:100px;font-weight:600;font-size:15px;transition:opacity .15s;display:inline-flex;gap:8px;align-items:center}
+  .btn:hover{opacity:.88}
+  .btn.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .btn:disabled{opacity:.35;cursor:not-allowed}
+
+  /* config panel */
+  .panel{display:none;padding:34px 0 80px;animation:fade .4s ease}
+  .panel.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .cfg-top{display:flex;align-items:center;gap:16px;margin-bottom:8px}
+  .cfg-badge{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:26px;color:#fff}
+  .cfg-top h2{font-family:'Fraunces';font-size:30px;font-weight:600;letter-spacing:-.02em}
+  .cfg-top p{color:var(--muted);font-size:14px;margin-top:2px}
+  .backlink{font-size:13.5px;color:var(--muted);font-weight:500;margin-bottom:22px;display:inline-flex;gap:6px;align-items:center}
+  .backlink:hover{color:var(--ink)}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:26px}
+  @media(max-width:900px){.cols{grid-template-columns:1fr}}
+  .block{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+  .block h3{font-family:'Space Grotesk';font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:16px;display:flex;justify-content:space-between}
+  .qrow{margin-bottom:18px}
+  .qrow:last-child{margin-bottom:0}
+  .qlabel{font-size:14px;font-weight:600;margin-bottom:9px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{padding:8px 14px;border:1px solid var(--line);border-radius:100px;font-size:13.5px;font-weight:500;background:var(--paper);transition:all .14s}
+  .chip:hover{border-color:#c9c0b3}
+  .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .toggle{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)}
+  .toggle:last-child{border-bottom:none}
+  .toggle .t-l{font-size:14px;font-weight:500}
+  .toggle .t-d{font-size:12px;color:var(--muted);margin-top:1px}
+  .sw{width:42px;height:24px;border-radius:100px;background:var(--line);position:relative;transition:background .18s;flex-shrink:0}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .18s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .sw.on{background:var(--ok)}
+  .sw.on::after{transform:translateX(18px)}
+
+  /* live preview */
+  .preview-wrap{margin-top:34px}
+  .preview-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .preview-head h3{font-family:'Space Grotesk';font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .browser{border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);background:#fff}
+  .browser-bar{display:flex;align-items:center;gap:8px;padding:11px 16px;background:#f1ece4;border-bottom:1px solid var(--line)}
+  .dots span{width:11px;height:11px;border-radius:50%;display:inline-block;background:#cfc7ba;margin-right:6px}
+  .urlbar{flex:1;background:#fff;border-radius:8px;padding:6px 12px;font-size:12px;color:var(--muted);text-align:center}
+  .site{min-height:440px;position:relative;transition:background .3s,color .3s}
+
+  /* template hero (dynamic) */
+  .thero{padding:46px 40px;position:relative;overflow:hidden}
+  .tnav{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;font-size:13px}
+  .tbrand{font-weight:700;font-size:18px}
+  .tnav-links{display:flex;gap:20px;opacity:.75}
+  .theadline{font-size:clamp(30px,4.5vw,46px);line-height:1.02;letter-spacing:-.02em;max-width:15ch;margin-bottom:16px}
+  .tsub{font-size:15px;opacity:.8;max-width:44ch;margin-bottom:26px}
+  .tbtn{display:inline-block;padding:13px 26px;border-radius:100px;font-weight:600;font-size:14px}
+  .tgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 40px 40px}
+  .ttile{aspect-ratio:1;border-radius:10px;display:grid;place-items:center;font-size:12px;font-weight:600;text-align:center;padding:8px}
+  .tsvc{padding:8px 40px 20px;display:flex;flex-wrap:wrap;gap:8px}
+  .tsvc .p{padding:6px 13px;border-radius:100px;font-size:12.5px;font-weight:500}
+  .float-book{position:absolute;bottom:20px;right:20px;padding:12px 22px;border-radius:100px;font-weight:700;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.25);display:none}
+  .float-book.on{display:block}
+  .addon-strip{display:flex;flex-wrap:wrap;gap:6px;padding:14px 40px;border-top:1px solid rgba(128,128,128,.18);font-size:11px}
+  .addon-strip .a{padding:4px 10px;border-radius:6px;background:rgba(128,128,128,.12);font-weight:500}
+
+  .footnote{margin-top:14px;font-size:12.5px;color:var(--muted)}
+  .kv{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+  .kv b{font-weight:600}
+  footer{border-top:1px solid var(--line);padding:30px 0;color:var(--muted);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;padding:0">
+    <div class="logo"><span class="dot">✦</span>BookKit</div>
+    <div class="steps">
+      <span class="s active" id="st1">1 · Business type</span>
+      <span class="s" id="st2">2 · Configure</span>
+      <span class="s" id="st3">3 · Design</span>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 1 -->
+<div id="chooser">
+<div class="wrap">
+  <div class="hero">
+    <div class="eyebrow">Onboarding · one question changes everything</div>
+    <h1>What kind of business are <em>you</em>?</h1>
+    <p class="sub">Pick your trade. The whole platform reshapes around it — the questions we ask, the services you offer, the booking flow, and the site design. Same engine underneath, built to feel like it was made for you.</p>
+  </div>
+
+  <div class="section-label"><h2>Choose your profession</h2><span>10 tailored experiences</span></div>
+  <div class="grid" id="pgrid"></div>
+
+  <div class="cta-row">
+    <button class="btn" id="continue" disabled>Continue setup <span>→</span></button>
+    <span class="footnote" id="pickhint">Select a profession to see how the experience adapts.</span>
+  </div>
+</div>
+</div>
+
+<!-- STEP 2/3 -->
+<div class="panel" id="config">
+<div class="wrap">
+  <button class="backlink" id="back">← Back to business types</button>
+  <div class="cfg-top">
+    <div class="cfg-badge" id="cfgBadge">✂</div>
+    <div>
+      <h2 id="cfgTitle">Barber</h2>
+      <p id="cfgTag">Dark, masculine, built for fades and walk-ins.</p>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="block">
+      <h3>Setup questions <span style="color:var(--accent)">tailored</span></h3>
+      <div id="questions"></div>
+    </div>
+    <div class="block">
+      <h3>Bells &amp; whistles <span id="addonCount" style="color:var(--ok)">0 on</span></h3>
+      <div id="addons"></div>
+    </div>
+  </div>
+
+  <div class="preview-wrap">
+    <div class="preview-head">
+      <h3>Live template preview</h3>
+      <span class="footnote" id="tplName">barber template</span>
+    </div>
+    <div class="browser">
+      <div class="browser-bar">
+        <span class="dots"><span></span><span></span><span></span></span>
+        <div class="urlbar" id="urlbar">yourbusiness.bookkit.site</div>
+      </div>
+      <div class="site" id="site"></div>
+    </div>
+    <div class="kv footnote" id="summary"></div>
+  </div>
+</div>
+</div>
+
+<footer>BookKit concept prototype · profession-specific templates on one shared booking engine</footer>
+
+<script>
+const PROF = {
+  barber:{name:"Barber",icon:"✂",tag:"Dark, masculine, built for fades and walk-ins.",
+    theme:{bg:"#111214",fg:"#f4f2ee",accent:"#c8a24a",tileBg:"#1c1e21",btnFg:"#111214",sub:"Fresh fades, sharp lines, no wait."},
+    head:"Sharp cuts.\nEvery chair, every time.",
+    services:["Skin fade","Beard trim","Kids cut","Line-up","Hot towel","Walk-in"],
+    gallery:["Low fade","Mid fade","Taper","Beard shape"],
+    questions:[
+      {q:"Fade styles you offer",type:"multi",opts:["Low","Mid","High","Bald","Taper","Burst"]},
+      {q:"Beard services",type:"multi",opts:["Trim","Line-up","Hot towel","Full grooming"]},
+      {q:"Do you take walk-ins?",type:"single",opts:["Walk-ins on","Appointment only"]},
+      {q:"Staff chairs",type:"single",opts:["1 chair","2–4 chairs","5+ chairs"]},
+      {q:"Recurring appointments",type:"single",opts:["Enabled","Off"]},
+    ]},
+  salon:{name:"Hair Salon",icon:"💇",tag:"Editorial, colorful, multi-stylist.",
+    theme:{bg:"#f7ede9",fg:"#2a1d24",accent:"#c0466b",tileBg:"#fff",btnFg:"#fff",sub:"Color, cut, and shine — your look, elevated."},
+    head:"Color that\nturns heads.",
+    services:["Balayage","Highlights","Blowout","Gloss","Treatment","Cut & style"],
+    gallery:["Balayage","Full color","Highlights","Blowout"],
+    questions:[
+      {q:"Color services",type:"multi",opts:["Balayage","Highlights","Full color","Gloss","Color correction"]},
+      {q:"Styling",type:"multi",opts:["Blowout","Updo","Treatment","Extensions"]},
+      {q:"Number of stylists",type:"single",opts:["Solo","2–5","6+"]},
+      {q:"Product recommendations",type:"single",opts:["Show products","Off"]},
+    ]},
+  braider:{name:"Braider",icon:"🪢",tag:"Big galleries, braid categories, hair add-ons.",
+    theme:{bg:"#1a1526",fg:"#f3ecff",accent:"#e0a92e",tileBg:"#261d38",btnFg:"#1a1526",sub:"Every braid, every length — booked in seconds."},
+    head:"Braids that\nlast for weeks.",
+    services:["Box braids","Knotless","Cornrows","Twists","Locs retwist","Kids styles"],
+    gallery:["Knotless","Box braids","Cornrows","Goddess"],
+    questions:[
+      {q:"Is hair included?",type:"single",opts:["Hair included","Client brings hair","Both options"]},
+      {q:"Hair length options",type:"multi",opts:["Bra","Waist","Butt","Custom"]},
+      {q:"Braid size",type:"multi",opts:["Small","Medium","Large","Jumbo"]},
+      {q:"Add-on hair color",type:"single",opts:["Offered","Off"]},
+      {q:"Gallery organized by",type:"single",opts:["Braid style","Length","Both"]},
+    ]},
+  loctician:{name:"Loctician",icon:"🌀",tag:"Educational, consultation-first, progress photos.",
+    theme:{bg:"#f2efe6",fg:"#28241c",accent:"#8a6d3b",tileBg:"#fff",btnFg:"#fff",sub:"Start, grow, and maintain healthy locs."},
+    head:"Your loc journey,\nguided.",
+    services:["Starter locs","Retwist","Instant locs","Interlocking","Detox","Consultation"],
+    gallery:["Starter","Retwist","Instant","Styled"],
+    questions:[
+      {q:"Consultation before booking?",type:"single",opts:["Required","Optional","Off"]},
+      {q:"Loc services",type:"multi",opts:["Starter locs","Retwist","Instant locs","Repair"]},
+      {q:"Maintenance plans",type:"single",opts:["Monthly plan","Per-visit","Both"]},
+      {q:"Progress photo timeline",type:"single",opts:["Enabled","Off"]},
+    ]},
+  wig:{name:"Wig Specialist",icon:"👑",tag:"Product catalog + install appointments.",
+    theme:{bg:"#efe9f2",fg:"#241b2e",accent:"#a24bd6",tileBg:"#fff",btnFg:"#fff",sub:"Custom units and ready-to-ship, installed by a pro."},
+    head:"Wigs made\nfor you.",
+    services:["Custom unit","Coloring","Install","Measurements","Maintenance","Ready-to-ship"],
+    gallery:["Lace front","Colored","Custom","Ready-ship"],
+    questions:[
+      {q:"Wig customization",type:"multi",opts:["Cut","Color","Bleach knots","Pluck","Custom cap"]},
+      {q:"Measurements collected at booking?",type:"single",opts:["Yes","In-person"]},
+      {q:"Installation service",type:"single",opts:["Offered","Off"]},
+      {q:"Ready-to-ship storefront",type:"single",opts:["Enabled","Off"]},
+    ]},
+  nail:{name:"Nail Studio",icon:"💅",tag:"Colorful, visual, trending designs.",
+    theme:{bg:"#fdeef4",fg:"#3a1f2c",accent:"#ff4d94",tileBg:"#fff",btnFg:"#fff",sub:"Shapes, sets, and art — booked your way."},
+    head:"Nails worth\nposting.",
+    services:["Gel set","Acrylic","Nail art","Fill-in","Removal","Pedicure"],
+    gallery:["French","Chrome","Art set","Ombré"],
+    questions:[
+      {q:"Gel or acrylic",type:"multi",opts:["Gel","Acrylic","Dip","Polygel"]},
+      {q:"Shape",type:"multi",opts:["Square","Almond","Coffin","Stiletto","Round"]},
+      {q:"Length",type:"multi",opts:["Short","Medium","Long","XL"]},
+      {q:"Nail art & add-ons",type:"single",opts:["Offered","Off"]},
+      {q:"Removal / fill-ins",type:"single",opts:["Both","Removal only","Off"]},
+    ]},
+  esthetician:{name:"Esthetician / Spa",icon:"🧖",tag:"Calm, luxurious, wellness-focused.",
+    theme:{bg:"#eaf1ee",fg:"#1e2b26",accent:"#4f8f76",tileBg:"#fff",btnFg:"#fff",sub:"Facials, peels, and glow — personalized care."},
+    head:"Skin that\nfeels renewed.",
+    services:["Signature facial","Chemical peel","Waxing","Skin analysis","Membership","Add-ons"],
+    gallery:["Facial","Peel","Wax","Glow"],
+    questions:[
+      {q:"Facial menu",type:"multi",opts:["Signature","Anti-aging","Acne","Hydrating"]},
+      {q:"Skin analysis at intake?",type:"single",opts:["Enabled","Off"]},
+      {q:"Advanced treatments",type:"multi",opts:["Chemical peel","Microneedling","Dermaplaning"]},
+      {q:"Waxing",type:"single",opts:["Full menu","Face only","Off"]},
+      {q:"Memberships",type:"single",opts:["Enabled","Off"]},
+    ]},
+  massage:{name:"Massage Therapy",icon:"💆",tag:"Serene, clean, calming — with intake.",
+    theme:{bg:"#eef0f3",fg:"#232830",accent:"#5a7ea6",tileBg:"#fff",btnFg:"#fff",sub:"Therapeutic bodywork tailored to you."},
+    head:"Rest,\nrestored.",
+    services:["Swedish","Deep tissue","Sports","Prenatal","Hot stone","Add-ons"],
+    gallery:["Room 1","Room 2","Couples","Table"],
+    questions:[
+      {q:"Massage types",type:"multi",opts:["Swedish","Deep tissue","Sports","Prenatal","Hot stone"]},
+      {q:"Pressure preference asked?",type:"single",opts:["At booking","In-person"]},
+      {q:"Focus areas selector",type:"single",opts:["Enabled","Off"]},
+      {q:"Medical intake form",type:"single",opts:["Required","Optional"]},
+      {q:"Room selection",type:"single",opts:["Enabled","Off"]},
+    ]},
+  tattoo:{name:"Tattoo Studio",icon:"🎨",tag:"Portfolio-first, artist galleries, deposits.",
+    theme:{bg:"#0e0e10",fg:"#f0efee",accent:"#e63946",tileBg:"#19191c",btnFg:"#fff",sub:"Custom work by resident artists. Consultation first."},
+    head:"Ink with\nintention.",
+    services:["Consultation","Custom piece","Fine line","Cover-up","Touch-up","Flash"],
+    gallery:["Artist A","Artist B","Fine line","Color"],
+    questions:[
+      {q:"Consultation required?",type:"single",opts:["Required","Optional"]},
+      {q:"Placement selector",type:"single",opts:["Enabled","Off"]},
+      {q:"Size estimate at booking",type:"single",opts:["Enabled","Off"]},
+      {q:"Reference photo uploads",type:"single",opts:["Enabled","Off"]},
+      {q:"Deposit required",type:"single",opts:["Required","Off"]},
+    ]},
+  makeup:{name:"Makeup Artist",icon:"💄",tag:"Bridal & event-focused, mobile-ready.",
+    theme:{bg:"#f7ecec",fg:"#33222a",accent:"#c25b7c",tileBg:"#fff",btnFg:"#fff",sub:"Bridal, events, and trials — on location or in studio."},
+    head:"Beauty for\nyour big day.",
+    services:["Bridal glam","Trial","Event look","Party group","Mobile","Lashes"],
+    gallery:["Bridal","Soft glam","Editorial","Party"],
+    questions:[
+      {q:"Bridal packages",type:"multi",opts:["Bride only","Bride + party","Full day"]},
+      {q:"Trial appointments",type:"single",opts:["Offered","Off"]},
+      {q:"Event bookings",type:"multi",opts:["Weddings","Photoshoots","Parties","Proms"]},
+      {q:"Mobile / on-location service",type:"single",opts:["Offered","Studio only"]},
+      {q:"Travel fees",type:"single",opts:["Auto-calculated","Flat","Off"]},
+    ]},
+};
+
+const ADDONS = [
+  ["Animated hero","Motion on the landing header"],
+  ["Video background","Looping clip behind the hero"],
+  ["Before & after slider","Drag-to-compare results"],
+  ["Instagram / TikTok feed","Pull latest posts in"],
+  ["Floating Book Now","Sticky booking button"],
+  ["Team introductions","Staff bios & photos"],
+  ["FAQ accordion","Common questions section"],
+  ["Promo countdown","Timed offer banner"],
+  ["Gift cards","Sell digital gift cards"],
+  ["Memberships","Recurring plans"],
+  ["Loyalty rewards","Points & perks"],
+  ["Testimonials","Client quotes"],
+  ["Live chat","On-site messaging"],
+  ["Google Reviews","Embed star ratings"],
+  ["Maps & directions","Location block"],
+  ["Blog / news","Post updates"],
+  ["Online store","Sell products"],
+  ["Multi-language","Translate the site"],
+];
+
+let current=null;
+const state={questions:{},addons:new Set()};
+
+// build profession grid
+const pgrid=document.getElementById('pgrid');
+Object.entries(PROF).forEach(([k,p])=>{
+  const b=document.createElement('button');
+  b.className='card'; b.dataset.k=k;
+  b.innerHTML=`<span class="swatch" style="background:${p.theme.accent}"></span>
+    <span class="ic">${p.icon}</span>
+    <span class="nm">${p.name}</span>
+    <span class="ds">${p.tag}</span>`;
+  b.onclick=()=>{
+    document.querySelectorAll('.card').forEach(c=>c.classList.remove('sel'));
+    b.classList.add('sel'); current=k;
+    document.getElementById('continue').disabled=false;
+    document.getElementById('pickhint').textContent=`${p.name} selected — continue to see its tailored setup.`;
+  };
+  pgrid.appendChild(b);
+});
+
+document.getElementById('continue').onclick=openConfig;
+document.getElementById('back').onclick=()=>{
+  document.getElementById('config').classList.remove('on');
+  document.getElementById('chooser').style.display='block';
+  setStep(1);
+  window.scrollTo({top:0,behavior:'smooth'});
+};
+
+function setStep(n){
+  [1,2,3].forEach(i=>document.getElementById('st'+i).classList.toggle('active',i<=n));
+}
+
+function openConfig(){
+  const p=PROF[current];
+  state.questions={}; state.addons=new Set();
+  document.getElementById('chooser').style.display='none';
+  document.getElementById('config').classList.add('on');
+  setStep(3);
+  document.getElementById('cfgBadge').textContent=p.icon;
+  document.getElementById('cfgBadge').style.background=p.theme.accent;
+  document.getElementById('cfgTitle').textContent=p.name;
+  document.getElementById('cfgTag').textContent=p.tag;
+  document.getElementById('tplName').textContent=`${current} template`;
+
+  // questions
+  const qc=document.getElementById('questions'); qc.innerHTML='';
+  p.questions.forEach((q,qi)=>{
+    const row=document.createElement('div'); row.className='qrow';
+    row.innerHTML=`<div class="qlabel">${q.q}</div>`;
+    const chips=document.createElement('div'); chips.className='chips';
+    q.opts.forEach(o=>{
+      const c=document.createElement('button'); c.className='chip'; c.textContent=o;
+      c.onclick=()=>{
+        if(q.type==='single'){
+          [...chips.children].forEach(x=>x.classList.remove('on'));
+          c.classList.add('on'); state.questions[qi]=o;
+        }else{
+          c.classList.toggle('on');
+          const set=state.questions[qi]||new Set();
+          c.classList.contains('on')?set.add(o):set.delete(o);
+          state.questions[qi]=set;
+        }
+        renderSummary();
+      };
+      chips.appendChild(c);
+    });
+    row.appendChild(chips); qc.appendChild(row);
+  });
+
+  // addons
+  const ac=document.getElementById('addons'); ac.innerHTML='';
+  ADDONS.forEach((a,ai)=>{
+    const t=document.createElement('div'); t.className='toggle';
+    t.innerHTML=`<div><div class="t-l">${a[0]}</div><div class="t-d">${a[1]}</div></div><div class="sw"></div>`;
+    const sw=t.querySelector('.sw');
+    // sensible defaults per profession
+    const on=defaultAddon(current,a[0]);
+    if(on){sw.classList.add('on');state.addons.add(a[0]);}
+    sw.onclick=()=>{
+      sw.classList.toggle('on');
+      sw.classList.contains('on')?state.addons.add(a[0]):state.addons.delete(a[0]);
+      renderPreview(); renderSummary();
+    };
+    ac.appendChild(t);
+  });
+
+  renderPreview(); renderSummary();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function defaultAddon(k,name){
+  const d={
+    barber:["Floating Book Now","Before & after slider","Google Reviews"],
+    salon:["Instagram / TikTok feed","Before & after slider","Testimonials"],
+    braider:["Floating Book Now","Instagram / TikTok feed","Gift cards"],
+    loctician:["FAQ accordion","Testimonials","Blog / news"],
+    wig:["Online store","Instagram / TikTok feed","Floating Book Now"],
+    nail:["Instagram / TikTok feed","Before & after slider","Loyalty rewards"],
+    esthetician:["Memberships","Testimonials","Google Reviews"],
+    massage:["FAQ accordion","Google Reviews","Maps & directions"],
+    tattoo:["Instagram / TikTok feed","Team introductions","FAQ accordion"],
+    makeup:["Before & after slider","Testimonials","Instagram / TikTok feed"],
+  };
+  return (d[k]||[]).includes(name);
+}
+
+function renderPreview(){
+  const p=PROF[current], th=p.theme;
+  const site=document.getElementById('site');
+  document.getElementById('urlbar').textContent=`${current}.bookkit.site`;
+  const float=state.addons.has("Floating Book Now");
+  const activeAddons=[...state.addons];
+  site.style.background=th.bg; site.style.color=th.fg;
+
+  const galleryTiles=p.gallery.map((g,i)=>
+    `<div class="ttile" style="background:${th.tileBg};color:${th.fg};border:1px solid ${th.accent}33">${g}</div>`).join('');
+  const svc=p.services.map(s=>`<span class="p" style="background:${th.tileBg};color:${th.fg};border:1px solid ${th.accent}44">${s}</span>`).join('');
+  const addonStrip=activeAddons.length?`<div class="addon-strip">${activeAddons.map(a=>`<span class="a" style="color:${th.fg}">+ ${a}</span>`).join('')}</div>`:'';
+  const heroBadge=state.addons.has("Animated hero")?' ● live':'';
+
+  site.innerHTML=`
+    <div class="thero">
+      <div class="tnav">
+        <div class="tbrand">${p.name}</div>
+        <div class="tnav-links"><span>Services</span><span>Gallery</span><span>Book</span></div>
+      </div>
+      <div class="theadline">${p.head.replace(/\n/g,'<br>')}</div>
+      <div class="tsub">${th.sub}${heroBadge?`<span style="color:${th.accent};font-weight:600">${heroBadge}</span>`:''}</div>
+      <a class="tbtn" style="background:${th.accent};color:${th.btnFg}">Book now →</a>
+    </div>
+    <div class="tsvc">${svc}</div>
+    <div class="tgrid">${galleryTiles}</div>
+    ${addonStrip}
+    <div class="float-book ${float?'on':''}" style="background:${th.accent};color:${th.btnFg}">Book Now</div>
+  `;
+}
+
+function renderSummary(){
+  const p=PROF[current];
+  document.getElementById('addonCount').textContent=`${state.addons.size} on`;
+  const answered=Object.values(state.questions).filter(v=>v&&(v.size?v.size>0:true)).length;
+  const parts=[];
+  parts.push(`<b>Engine:</b> shared booking core`);
+  parts.push(`<b>Template:</b> ${p.name.toLowerCase()}`);
+  parts.push(`<b>Setup answered:</b> ${answered}/${p.questions.length}`);
+  parts.push(`<b>Enhancements:</b> ${state.addons.size}`);
+  document.getElementById('summary').innerHTML=parts.map(x=>`<span>${x}</span>`).join('<span style="opacity:.4">·</span>');
+}
+</script>
+</body>
+</html>

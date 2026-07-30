@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookKit — Website Templates</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..600&family=DM+Serif+Display&family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Inter:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400..800;1,400..600&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@600;700;800&family=Cormorant+Garamond:ital,wght@0,400..600;1,400..500&family=Poppins:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:#0e0d10;color:#fff;-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+  /* ---- builder chrome (the studio UI around the live site) ---- */
+  .studio{display:grid;grid-template-columns:260px 1fr;height:100vh;overflow:hidden}
+  @media(max-width:900px){.studio{grid-template-columns:1fr;height:auto}}
+  .panel{background:#16151a;border-right:1px solid #262429;padding:18px;overflow-y:auto;display:flex;flex-direction:column;gap:20px}
+  @media(max-width:900px){.panel{border-right:none;border-bottom:1px solid #262429;max-height:none}}
+  .brand{font-family:'Space Grotesk';font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px}
+  .brand .dot{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#7c6cf5,#ff6b4a);display:grid;place-items:center;font-size:12px}
+  .pgroup h4{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#8b8792;font-weight:600;margin-bottom:10px}
+  .tpl-list{display:flex;flex-direction:column;gap:5px}
+  .tpl-btn{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;font-size:13px;font-weight:500;color:#c9c6d0;transition:.12s;border:1px solid transparent;text-align:left;width:100%}
+  .tpl-btn:hover{background:#201e26}
+  .tpl-btn.on{background:#252230;color:#fff;border-color:#3a3446}
+  .tpl-btn .sw{width:16px;height:16px;border-radius:5px;flex-shrink:0}
+  .tpl-btn .ic{font-size:14px}
+
+  .cust label{font-size:11.5px;color:#a7a3ae;display:block;margin-bottom:5px;font-weight:500}
+  .swatches{display:flex;gap:6px;margin-bottom:12px}
+  .swatches button{width:26px;height:26px;border-radius:7px;border:2px solid transparent;transition:.12s}
+  .swatches button.on{border-color:#fff}
+  .cust input[type=text]{width:100%;background:#201e26;border:1px solid #322e3a;border-radius:8px;padding:8px 10px;color:#fff;font-family:inherit;font-size:13px;outline:none;margin-bottom:12px}
+  .cust input:focus{border-color:#7c6cf5}
+  .font-row{display:flex;gap:6px;margin-bottom:6px}
+  .font-row button{flex:1;padding:7px;border-radius:7px;border:1px solid #322e3a;background:#201e26;font-size:11.5px;color:#c9c6d0}
+  .font-row button.on{background:#7c6cf5;border-color:#7c6cf5;color:#fff}
+
+  .addons{display:flex;flex-direction:column;gap:2px}
+  .addon-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;font-size:12.5px}
+  .addon-row .an{color:#d4d1da}
+  .addon-row.on .an{color:#fff}
+  .sw-t{width:34px;height:20px;border-radius:100px;background:#322e3a;position:relative;transition:.15s;flex-shrink:0}
+  .sw-t::after{content:"";position:absolute;top:2.5px;left:2.5px;width:15px;height:15px;border-radius:50%;background:#fff;transition:.15s}
+  .sw-t.on{background:#3ecf8e}.sw-t.on::after{transform:translateX(14px)}
+
+  .stage-wrap{overflow-y:auto;background:#0e0d10;position:relative}
+  .stage-bar{position:sticky;top:0;z-index:20;background:rgba(14,13,16,.9);backdrop-filter:blur(10px);border-bottom:1px solid #262429;padding:10px 16px;display:flex;align-items:center;gap:12px}
+  .urlpill{flex:1;background:#1c1a20;border:1px solid #2c2a32;border-radius:100px;padding:7px 14px;font-size:12px;color:#8b8792;text-align:center;font-family:'Space Grotesk'}
+  .urlpill b{color:#c9c6d0}
+  .device{display:flex;gap:4px}
+  .device button{padding:5px 10px;border-radius:7px;font-size:11px;color:#8b8792;border:1px solid #2c2a32}
+  .device button.on{background:#252230;color:#fff}
+  .publish{background:#3ecf8e;color:#08130d;font-weight:700;font-size:12.5px;padding:8px 16px;border-radius:100px}
+
+  .frame{padding:22px;display:flex;justify-content:center}
+  .frame.mobile .site{max-width:390px}
+  .site{width:100%;max-width:960px;border-radius:16px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);transition:max-width .3s}
+
+  /* ============ TEMPLATE BASE (variables set per template) ============ */
+  .tpl{--bg:#111;--fg:#fff;--accent:#c8a24a;--soft:#1c1c1c;--muted:rgba(255,255,255,.6);
+       background:var(--bg);color:var(--fg);position:relative;min-height:560px}
+  .tpl a,.tpl button{color:inherit}
+  .nav{display:flex;align-items:center;justify-content:space-between;padding:20px 30px;font-size:13px}
+  .nav .logo{font-weight:700;letter-spacing:.02em}
+  .nav .links{display:flex;gap:20px;opacity:.8}
+  @media(max-width:520px){.nav .links{display:none}}
+  .book-btn{padding:9px 18px;border-radius:100px;font-weight:600;font-size:13px;background:var(--accent);color:var(--bg)}
+
+  .hero{padding:34px 30px 40px}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.7;margin-bottom:14px}
+  .headline{line-height:1;margin-bottom:16px}
+  .hero p{opacity:.75;max-width:44ch;font-size:15px;margin-bottom:22px;line-height:1.5}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+  .btn-ghost{padding:12px 22px;border-radius:100px;font-weight:600;font-size:14px;border:1px solid rgba(255,255,255,.25)}
+  .btn-solid{padding:12px 24px;border-radius:100px;font-weight:600;font-size:14px;background:var(--accent);color:var(--bg)}
+
+  .sec{padding:26px 30px}
+  .sec-title{font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:.6;margin-bottom:16px;font-weight:600}
+  .services{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  @media(max-width:520px){.services{grid-template-columns:1fr}}
+  .svc{background:var(--soft);border-radius:12px;padding:15px 16px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .svc .sn{font-weight:600;font-size:14px}
+  .svc .sd{font-size:11.5px;opacity:.55;margin-top:2px}
+  .svc .sp{font-weight:700;font-size:14px;color:var(--accent);white-space:nowrap;font-family:'Space Grotesk'}
+
+  .see-all{margin-top:12px;width:100%;padding:12px;border-radius:100px;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,.2);background:transparent;color:var(--fg);display:flex;align-items:center;justify-content:center;gap:7px;transition:.14s}
+  .see-all:hover{border-color:var(--accent);color:var(--accent)}
+  .see-all span{font-size:10px}
+  .gallery{display:grid;gap:8px}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:520px){.g4,.g3{grid-template-columns:repeat(2,1fr)}}
+  .gtile{aspect-ratio:3/4;border-radius:10px;position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:10px;font-size:11px;font-weight:600}
+  .gtile span{position:relative;z-index:2}
+  .gtile::before{content:"";position:absolute;inset:0;background:linear-gradient(160deg,var(--accent),transparent 60%),var(--soft);opacity:.9}
+  .gtile::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.5),transparent 50%)}
+
+  .cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .cat{padding:7px 14px;border-radius:100px;font-size:12px;font-weight:500;border:1px solid rgba(255,255,255,.15);opacity:.85}
+  .cat.on{background:var(--accent);color:var(--bg);border-color:transparent}
+
+  /* add-on modules (conditionally shown) */
+  .mod{padding:26px 30px;border-top:1px solid rgba(255,255,255,.08)}
+  .mod-ba{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .mod-ba .half{aspect-ratio:4/3;border-radius:10px;display:grid;place-items:center;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;position:relative;overflow:hidden}
+  .mod-ba .before{background:var(--soft);opacity:.6}
+  .mod-ba .after{background:linear-gradient(140deg,var(--accent),var(--soft))}
+  .mod-ba .half span{position:relative;z-index:2;background:rgba(0,0,0,.4);padding:3px 8px;border-radius:100px}
+  .feed{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  @media(max-width:520px){.feed{grid-template-columns:repeat(3,1fr)}}
+  .feed .fi{aspect-ratio:1;border-radius:8px;background:var(--soft);position:relative;overflow:hidden}
+  .feed .fi::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,var(--accent),transparent 70%);opacity:.5}
+  .team{display:flex;gap:14px;flex-wrap:wrap}
+  .member{text-align:center;font-size:12px}
+  .member .ph{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--soft));margin:0 auto 6px}
+  .member .mn{font-weight:600}.member .mr{opacity:.55;font-size:10.5px}
+  .faq-q{padding:13px 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:14px;font-weight:500;display:flex;justify-content:space-between}
+  .faq-q .pl{opacity:.5}
+  .reviews{display:flex;gap:10px;flex-wrap:wrap}
+  .rev{flex:1;min-width:180px;background:var(--soft);border-radius:12px;padding:14px}
+  .rev .stars{color:#e3b84e;font-size:13px;letter-spacing:2px}
+  .rev .rt{font-size:12.5px;opacity:.8;margin:6px 0}
+  .rev .ra{font-size:11px;opacity:.5;font-weight:600}
+  .countdown{display:flex;align-items:center;justify-content:space-between;background:var(--accent);color:var(--bg);border-radius:12px;padding:14px 18px;font-weight:600;font-size:13px;flex-wrap:wrap;gap:10px}
+  .countdown .timer{font-family:'Space Grotesk';font-weight:700;font-size:18px}
+  .store{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  @media(max-width:520px){.store{grid-template-columns:repeat(2,1fr)}}
+  .prod{background:var(--soft);border-radius:12px;overflow:hidden}
+  .prod .pimg{aspect-ratio:1;background:linear-gradient(140deg,var(--accent),var(--soft));opacity:.85}
+  .prod .pinfo{padding:10px}
+  .prod .ptitle{font-size:12.5px;font-weight:600}
+  .prod .pprice{font-size:12px;color:var(--accent);font-weight:700;font-family:'Space Grotesk';margin-top:2px}
+  .map{height:120px;border-radius:12px;background:
+     repeating-linear-gradient(0deg,var(--soft),var(--soft) 18px,transparent 18px,transparent 36px),
+     repeating-linear-gradient(90deg,var(--soft),var(--soft) 18px,transparent 18px,transparent 36px),var(--bg);
+     position:relative;border:1px solid rgba(255,255,255,.08)}
+  .map::after{content:"📍";position:absolute;top:50%;left:50%;transform:translate(-50%,-60%);font-size:24px}
+
+  .footer{padding:24px 30px;border-top:1px solid rgba(255,255,255,.08);font-size:11.5px;opacity:.6;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+  /* floating book */
+  .float{position:absolute;bottom:18px;right:18px;padding:13px 22px;border-radius:100px;font-weight:700;font-size:13px;background:var(--accent);color:var(--bg);box-shadow:0 10px 30px rgba(0,0,0,.4);z-index:15}
+
+  /* animated hero shimmer */
+  .tpl.anim .headline{background:linear-gradient(90deg,var(--fg),var(--accent),var(--fg));background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:shine 4s linear infinite}
+  @keyframes shine{to{background-position:200% center}}
+  .videobg .hero{position:relative;overflow:hidden}
+  .videobg .hero::before{content:"";position:absolute;inset:0;background:linear-gradient(130deg,var(--accent),transparent 55%),var(--soft);opacity:.35;animation:drift 8s ease-in-out infinite alternate;z-index:0}
+  @keyframes drift{to{transform:scale(1.15) translate(4%,2%)}}
+  .videobg .hero>*{position:relative;z-index:1}
+  .chatbtn{position:absolute;bottom:18px;left:18px;width:46px;height:46px;border-radius:50%;background:var(--soft);border:1px solid rgba(255,255,255,.15);display:grid;place-items:center;font-size:19px;z-index:15}
+  .lang{font-size:11px;opacity:.6;border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:2px 7px}
+
+  .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,16px);background:#1c1a20;border:1px solid #322e3a;color:#fff;padding:11px 17px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:.24s;z-index:60}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="studio">
+  <aside class="panel">
+    <div class="brand"><span class="dot">✦</span> BookKit Sites</div>
+
+    <div class="pgroup">
+      <h4>Template</h4>
+      <div class="tpl-list" id="tplList"></div>
+    </div>
+
+    <div class="pgroup cust">
+      <h4>Customize <span style="color:#5b5766;font-weight:400;text-transform:none;letter-spacing:0">· within guardrails</span></h4>
+      <label>Business name</label>
+      <input type="text" id="bizName" value="Crown & Coils">
+      <label>Accent color</label>
+      <div class="swatches" id="swatches"></div>
+      <label>Heading font</label>
+      <div class="font-row" id="fontRow"></div>
+    </div>
+
+    <div class="pgroup">
+      <h4>Bells &amp; whistles</h4>
+      <div class="addons" id="addonList"></div>
+    </div>
+  </aside>
+
+  <div class="stage-wrap">
+    <div class="stage-bar">
+      <div class="urlpill"><b id="urlName">crown-coils</b>.bookkit.site</div>
+      <div class="device">
+        <button data-d="desk" class="on" id="dDesk">Desktop</button>
+        <button data-d="mob" id="dMob">Mobile</button>
+      </div>
+      <button class="publish" id="publish">Publish</button>
+    </div>
+    <div class="frame" id="frame">
+      <div class="site"><div class="tpl" id="tpl"></div></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* Each template = its own visual identity: fonts, layout archetype, palette, copy, signature. */
+const TEMPLATES={
+  braider:{label:"Braider",icon:"🪢",layout:"gallery",
+    fonts:{head:"'Syne',sans-serif",body:"'Outfit',sans-serif"},
+    palettes:["#e0a92e","#d6478f","#3ec9a7","#ff6b4a"],
+    bg:"#1a1526",fg:"#f3ecff",soft:"#261d38",
+    biz:"Crown & Coils",tag:"Protective styles, done with love.",
+    head:"Braids that<br>last for weeks.",
+    sub:"Knotless, box braids, cornrows and more — booked online, hair included, no back-and-forth.",
+    cats:["All","Knotless","Box braids","Cornrows","Goddess","Kids"],
+    services:[["Knotless (medium)","5–8 hrs · hair included","$220"],["Knotless (small)","8–14 hrs","from $300"],["Box braids","5–8 hrs","$180"],["Cornrows / feed-in","2–4 hrs","$90"],["Boho goddess","6–10 hrs","$260"],["Senegalese twists","5–8 hrs","$200"],["Faux locs","6–9 hrs","$240"],["Takedown","1–2 hrs","$60"],["Kids styles","2–3 hrs","$75"],["Color add-on","+30 min","+$15"]],
+    gallery:["Knotless","Boho","Jumbo","Fulani","Goddess","Cornrows","Waist-length","Color"],gcols:"g4",
+    defaults:["floatBook","instagram","giftCards","reviews"]},
+  barber:{label:"Barber",icon:"✂",layout:"split",
+    fonts:{head:"'Oswald',sans-serif",body:"'Inter',sans-serif"},
+    palettes:["#c8a24a","#d94f2a","#6ea0c8","#b0b0b0"],
+    bg:"#111214",fg:"#f4f2ee",soft:"#1c1e21",
+    biz:"Fadehouse",tag:"Sharp cuts. Every chair, every time.",
+    head:"CLEAN<br>FADES.",
+    sub:"Walk in or book ahead. Skin fades, beard work, and lineups that stay crisp.",
+    cats:["All","Fades","Beards","Kids","Designs"],
+    services:[["Skin fade","45 min","$40"],["Cut + beard","60 min","$55"],["Line-up","15 min","$20"],["Beard + towel","30 min","$30"],["Kids cut","30 min","$25"],["Design work","+15 min","$10"]],
+    gallery:["Low fade","Taper","Beard","Design","Pompadour","Buzz"],gcols:"g3",
+    defaults:["floatBook","beforeAfter","reviews","map"]},
+  salon:{label:"Hair Salon",icon:"💇",layout:"editorial",
+    fonts:{head:"'Bodoni Moda',serif",body:"'Inter',sans-serif"},
+    palettes:["#c0466b","#a6844f","#6d5aa8","#3f8f76"],
+    bg:"#f7ede9",fg:"#2a1d24",soft:"#efe0da",
+    biz:"Maison Hue",tag:"Color, cut, and shine — elevated.",
+    head:"Color that<br>turns heads.",
+    sub:"Balayage, gloss, and precision cuts from a team obsessed with the details.",
+    cats:["All","Color","Balayage","Cuts","Treatments"],
+    services:[["Balayage","2.5 hrs","$220"],["Full color","105 min","$160"],["Highlights","90 min","$140"],["Gloss + trim","60 min","$75"],["Blowout","45 min","$50"],["Bond treatment","+30 min","$35"]],
+    gallery:["Balayage","Copper","Blonde","Lived-in","Bob","Updo"],gcols:"g3",
+    defaults:["instagram","beforeAfter","reviews","team"]},
+  loctician:{label:"Loctician",icon:"🌀",layout:"journey",
+    fonts:{head:"'Fraunces',serif",body:"'Inter',sans-serif"},
+    palettes:["#8a6d3b","#a6572f","#4f7d5a","#b08a3e"],
+    bg:"#f2efe6",fg:"#28241c",soft:"#e6e0d2",
+    biz:"Rooted",tag:"Start, grow, and maintain healthy locs.",
+    head:"Your loc<br>journey, guided.",
+    sub:"From starter locs to mature maintenance — with a consultation-first approach and a plan for every stage.",
+    cats:["All","Starter","Retwist","Instant","Repair"],
+    services:[["Loc consultation","30 min · required","$50"],["Starter locs","3–8 hrs","from $200"],["Retwist + style","2–4 hrs","$135"],["Interlocking","2–5 hrs","$150"],["Instant locs","4–8 hrs","from $400"],["Detox / repair","varies","quote"]],
+    gallery:["Starter","Budding","Teen","Mature","Styled","Color"],gcols:"g3",
+    defaults:["faq","reviews","blog","team"]},
+  wig:{label:"Wig Specialist",icon:"👑",layout:"catalog",
+    fonts:{head:"'Playfair Display',serif",body:"'Inter',sans-serif"},
+    palettes:["#a24bd6","#c0466b","#4f8f76","#c89b3e"],
+    bg:"#efe9f2",fg:"#241b2e",soft:"#e2d7ea",
+    biz:"Lace & Co.",tag:"Custom units and ready-to-ship, installed by a pro.",
+    head:"Wigs made<br>for you.",
+    sub:"Shop ready-to-ship units or book a custom build and install with a specialist.",
+    cats:["All","Lace front","Colored","Custom","Ready-ship"],
+    services:[["Custom unit build","order","from $350"],["Coloring","1–3 hrs","from $120"],["Install","1–2 hrs","$90"],["Customization","1–2 hrs","$80"],["Measurements","20 min","free"],["Revamp","1–2 hrs","$100"]],
+    gallery:["Lace front","Bob unit","Colored","Curly","Straight","Custom"],gcols:"g3",
+    defaults:["store","instagram","floatBook","reviews"]},
+  nail:{label:"Nail Studio",icon:"💅",layout:"showcase",
+    fonts:{head:"'Poppins',sans-serif",body:"'Poppins',sans-serif"},
+    palettes:["#ff4d94","#ff8a3c","#7c6cf5","#3ecf8e"],
+    bg:"#fdeef4",fg:"#3a1f2c",soft:"#fbdce8",
+    biz:"Gloss Bar",tag:"Shapes, sets, and art — booked your way.",
+    head:"Nails worth<br>posting.",
+    sub:"Gel, acrylic, and hand-painted art. Bring a reference or trust the artist.",
+    cats:["All","Gel","Acrylic","Art","Pedi"],
+    services:[["Gel set","60 min","$55"],["Gel + art","75 min","$70"],["Acrylic full","90 min","$80"],["Fill-in","45 min","$35"],["Chrome set","75 min","$75"],["Pedicure","60 min","$55"]],
+    gallery:["French","Chrome","Ombré","Art set","3D","Almond"],gcols:"g4",
+    defaults:["instagram","beforeAfter","loyalty","floatBook"]},
+  spa:{label:"Esthetician / Spa",icon:"🧖",layout:"calm",
+    fonts:{head:"'Cormorant Garamond',serif",body:"'Inter',sans-serif"},
+    palettes:["#4f8f76","#8a9d5b","#6d8fa6","#b08a5b"],
+    bg:"#eaf1ee",fg:"#1e2b26",soft:"#dce8e2",
+    biz:"Still Skin",tag:"Facials, peels, and glow — personalized care.",
+    head:"Skin that<br>feels renewed.",
+    sub:"Results-driven facials and treatments in a calm, unhurried space.",
+    cats:["All","Facials","Peels","Waxing","Members"],
+    services:[["Signature facial","60 min","$120"],["Deluxe facial","90 min","$170"],["Chemical peel","45 min","$150"],["Dermaplaning","45 min","$90"],["Waxing","by area","from $25"],["Membership","monthly","$99/mo"]],
+    gallery:["Glow","Peel","Facial","LED","Wax","Results"],gcols:"g3",
+    defaults:["memberships","reviews","faq","map"]},
+  massage:{label:"Massage",icon:"💆",layout:"minimal",
+    fonts:{head:"'Space Grotesk',sans-serif",body:"'Inter',sans-serif"},
+    palettes:["#5a7ea6","#6d8f7a","#8a7ea6","#a6885b"],
+    bg:"#eef0f3",fg:"#232830",soft:"#e0e4ea",
+    biz:"Stillpoint",tag:"Therapeutic bodywork tailored to you.",
+    head:"Rest,<br>restored.",
+    sub:"Deep tissue, Swedish, and prenatal — choose your pressure and focus, we handle the rest.",
+    cats:["All","Swedish","Deep tissue","Prenatal","Hot stone"],
+    services:[["Swedish 60","60 min","$95"],["Deep tissue 60","60 min","$110"],["Therapeutic 90","90 min","$150"],["Prenatal","60 min","$105"],["Hot stone","90 min","$140"],["Targeted 30","30 min","$55"]],
+    gallery:["Studio","Room 1","Table","Stones","Oils","Calm"],gcols:"g3",
+    defaults:["faq","reviews","map"]},
+  tattoo:{label:"Tattoo",icon:"🎨",layout:"portfolio",
+    fonts:{head:"'Archivo Black',sans-serif",body:"'Inter',sans-serif"},
+    palettes:["#e63946","#e0a92e","#6ea0c8","#b0b0b0"],
+    bg:"#0e0e10",fg:"#f0efee",soft:"#19191c",
+    biz:"Ink & Iron",tag:"Custom work by resident artists. Consultation first.",
+    head:"INK WITH<br>INTENTION.",
+    sub:"Fine line, custom, and cover-ups. Browse our artists, then book a consultation.",
+    cats:["All","Artist A","Artist B","Fine line","Color"],
+    services:[["Consultation","30 min · required","free"],["Flash","30–60 min","from $120"],["Fine line","1–2 hrs","from $300"],["Custom piece","half/full day","quote"],["Cover-up","1.5–3 hrs","from $260"],["Touch-up","30–60 min","$60"]],
+    gallery:["Fine line","Blackwork","Color","Sleeve","Floral","Script","Realism","Traditional"],gcols:"g4",
+    defaults:["instagram","team","faq"]},
+  makeup:{label:"Makeup Artist",icon:"💄",layout:"editorial",
+    fonts:{head:"'DM Serif Display',serif",body:"'Inter',sans-serif"},
+    palettes:["#c25b7c","#c89b3e","#a6674f","#6d5aa8"],
+    bg:"#f7ecec",fg:"#33222a",soft:"#efdada",
+    biz:"Petal & Powder",tag:"Bridal, events, and trials — on location or in studio.",
+    head:"Beauty for<br>your big day.",
+    sub:"Bridal glam, trials, and event looks — mobile service available across the region.",
+    cats:["All","Bridal","Trials","Events","Party"],
+    services:[["Bridal trial","90 min","$150"],["Bridal day-of","per face","$200"],["Bridesmaid","45 min","$95"],["Event look","60 min","$120"],["Add lashes","+15 min","$20"],["On-location","travel","quote"]],
+    gallery:["Bridal","Soft glam","Editorial","Party","Natural","Bold"],gcols:"g3",
+    defaults:["beforeAfter","reviews","instagram","countdown"]},
+};
+
+const ADDONS=[
+  ["animHero","Animated hero"],["videoBg","Video background"],["beforeAfter","Before / after"],
+  ["instagram","Instagram feed"],["floatBook","Floating Book Now"],["team","Team intros"],
+  ["faq","FAQ accordion"],["countdown","Promo countdown"],["giftCards","Gift cards"],
+  ["memberships","Memberships"],["loyalty","Loyalty rewards"],["reviews","Testimonials"],
+  ["liveChat","Live chat"],["store","Online store"],["map","Map & directions"],["lang","Multi-language"],
+];
+
+let curKey='braider', state={}, showAllSvc=false;
+
+function initState(key){
+  const t=TEMPLATES[key];
+  state={key,accent:t.palettes[0],head:t.fonts.head,biz:t.biz,
+    addons:new Set(t.defaults)};
+  showAllSvc=false;
+}
+
+function renderPanel(){
+  // template list
+  document.getElementById('tplList').innerHTML=Object.entries(TEMPLATES).map(([k,t])=>
+    `<button class="tpl-btn ${k===curKey?'on':''}" data-k="${k}"><span class="ic">${t.icon}</span><span class="sw" style="background:${t.palettes[0]}"></span>${t.label}</button>`).join('');
+  document.querySelectorAll('.tpl-btn').forEach(b=>b.onclick=()=>{curKey=b.dataset.k;initState(curKey);renderAll();});
+
+  // swatches
+  const t=TEMPLATES[curKey];
+  document.getElementById('swatches').innerHTML=t.palettes.map(c=>
+    `<button data-c="${c}" class="${c===state.accent?'on':''}" style="background:${c}"></button>`).join('');
+  document.querySelectorAll('.swatches button').forEach(b=>b.onclick=()=>{state.accent=b.dataset.c;renderAll();});
+
+  // biz name
+  document.getElementById('bizName').value=state.biz;
+
+  // fonts (offer the template's head + 2 alternates)
+  const fontOpts=[t.fonts.head,"'Space Grotesk',sans-serif","'Fraunces',serif"];
+  const seen=new Set();const uniq=fontOpts.filter(f=>!seen.has(f)&&seen.add(f));
+  document.getElementById('fontRow').innerHTML=uniq.map((f,i)=>
+    `<button data-f="${f.replace(/"/g,'&quot;')}" class="${f===state.head?'on':''}">${f.split(',')[0].replace(/'/g,'')}</button>`).join('');
+  document.querySelectorAll('#fontRow button').forEach(b=>b.onclick=()=>{state.head=b.dataset.f;renderAll();});
+
+  // addons
+  document.getElementById('addonList').innerHTML=ADDONS.map(([id,label])=>
+    `<div class="addon-row ${state.addons.has(id)?'on':''}"><span class="an">${label}</span><div class="sw-t ${state.addons.has(id)?'on':''}" data-a="${id}"></div></div>`).join('');
+  document.querySelectorAll('.sw-t').forEach(s=>s.onclick=()=>{const id=s.dataset.a;state.addons.has(id)?state.addons.delete(id):state.addons.add(id);renderAll();});
+}
+
+function slug(s){return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');}
+
+function renderSite(){
+  const t=TEMPLATES[curKey];
+  const a=state.accent;
+  const tpl=document.getElementById('tpl');
+  const has=id=>state.addons.has(id);
+
+  let cls='tpl';
+  if(has('animHero'))cls+=' anim';
+  if(has('videoBg'))cls+=' videobg';
+  tpl.className=cls;
+  tpl.style.cssText=`--bg:${t.bg};--fg:${t.fg};--accent:${a};--soft:${t.soft};font-family:${t.fonts.body}`;
+
+  const headSize=t.layout==='portfolio'||t.layout==='split'?'clamp(38px,8vw,64px)':'clamp(32px,6.5vw,52px)';
+  const gallery=t.gallery.map(g=>`<div class="gtile"><span>${g}</span></div>`).join('');
+  const SVC_LIMIT=4;
+  const svcShown=showAllSvc?t.services:t.services.slice(0,SVC_LIMIT);
+  const services=svcShown.map(s=>`<div class="svc"><div><div class="sn">${s[0]}</div><div class="sd">${s[1]}</div></div><div class="sp">${s[2]}</div></div>`).join('');
+  const svcMore=t.services.length>SVC_LIMIT?`<button class="see-all" id="seeAll">${showAllSvc?'Show less':'See all '+t.services.length+' services'} <span>${showAllSvc?'▲':'▾'}</span></button>`:'';
+  const cats=t.cats.map((c,i)=>`<div class="cat ${i===0?'on':''}">${c}</div>`).join('');
+
+  // module builders
+  const M={
+    beforeAfter:()=>`<div class="mod"><div class="sec-title">Before / after</div><div class="mod-ba"><div class="half before"><span>Before</span></div><div class="half after"><span>After</span></div></div></div>`,
+    instagram:()=>`<div class="mod"><div class="sec-title">@${slug(state.biz)} on Instagram</div><div class="feed">${Array(8).fill('<div class="fi"></div>').join('')}</div></div>`,
+    team:()=>`<div class="mod"><div class="sec-title">Meet the team</div><div class="team">${['Nia','Rae','Mel','Kai'].map(n=>`<div class="member"><div class="ph"></div><div class="mn">${n}</div><div class="mr">Specialist</div></div>`).join('')}</div></div>`,
+    faq:()=>`<div class="mod"><div class="sec-title">FAQ</div>${['How do I prepare?','What is your deposit policy?','Do you offer consultations?','How long will it last?'].map(q=>`<div class="faq-q">${q}<span class="pl">+</span></div>`).join('')}</div>`,
+    reviews:()=>`<div class="mod"><div class="sec-title">What clients say</div><div class="reviews">${[['Best in the city — booked again on the spot.','— Jasmine'],['On time, gentle, and gorgeous work.','— Dana'],['The online booking made it so easy.','— Priya']].map(r=>`<div class="rev"><div class="stars">★★★★★</div><div class="rt">${r[0]}</div><div class="ra">${r[1]}</div></div>`).join('')}</div></div>`,
+    countdown:()=>`<div class="mod"><div class="countdown"><span>✨ Spring booking special — 15% off trials</span><span class="timer">02:14:36</span></div></div>`,
+    giftCards:()=>`<div class="mod"><div class="countdown" style="background:var(--soft);color:var(--fg)"><span>🎁 Gift cards available — treat someone</span><span style="color:var(--accent);font-weight:700">Buy →</span></div></div>`,
+    memberships:()=>`<div class="mod"><div class="sec-title">Membership</div><div class="countdown"><span>Glow monthly — one facial + 10% off retail</span><span class="timer">$99<span style="font-size:12px">/mo</span></span></div></div>`,
+    loyalty:()=>`<div class="mod"><div class="countdown" style="background:var(--soft);color:var(--fg)"><span>⭐ Loyalty — every 6th visit is 50% off</span><span style="color:var(--accent)">Join</span></div></div>`,
+    store:()=>`<div class="mod"><div class="sec-title">Shop ready-to-ship</div><div class="store">${['Lace unit · 20"','Body wave · 24"','Curly bob'].map((p,i)=>`<div class="prod"><div class="pimg"></div><div class="pinfo"><div class="ptitle">${p}</div><div class="pprice">$${[220,260,180][i]}</div></div></div>`).join('')}</div></div>`,
+    map:()=>`<div class="mod"><div class="sec-title">Find us</div><div class="map"></div><div style="font-size:12px;opacity:.6;margin-top:8px">128 Main St · open Tue–Sat</div></div>`,
+  };
+
+  // layout order differs per archetype — gallery-first for braider/tattoo/nail
+  const galleryFirst=['gallery','portfolio','showcase','catalog'].includes(t.layout);
+  const galSec=`<div class="sec"><div class="sec-title">${t.layout==='catalog'?'The collection':t.layout==='portfolio'?'Portfolio':'Recent work'}</div><div class="cats">${cats}</div><div class="gallery ${t.gcols}">${gallery}</div></div>`;
+  const svcSec=`<div class="sec"><div class="sec-title">Services</div><div class="services">${services}</div>${svcMore}</div>`;
+
+  let modsHtml='';
+  ADDONS.forEach(([id])=>{if(M[id]&&has(id))modsHtml+=M[id]();});
+
+  tpl.innerHTML=`
+    <div class="nav">
+      <div class="logo" style="font-family:${state.head};font-size:17px">${state.biz}</div>
+      <div class="links"><span>Services</span><span>Gallery</span><span>About</span>${has('lang')?'<span class="lang">EN ▾</span>':''}</div>
+      <button class="book-btn">Book</button>
+    </div>
+    <div class="hero">
+      <div class="eyebrow">${t.tag}</div>
+      <div class="headline" style="font-family:${state.head};font-size:${headSize};font-weight:${t.layout==='calm'||t.layout==='editorial'?'500':'700'}">${t.head}</div>
+      <p>${t.sub}</p>
+      <div class="hero-cta"><button class="btn-solid">Book now</button><button class="btn-ghost">View ${t.layout==='portfolio'?'portfolio':'gallery'}</button></div>
+    </div>
+    ${galleryFirst?galSec+svcSec:svcSec+galSec}
+    ${modsHtml}
+    <div class="footer"><span>${state.biz} · powered by BookKit</span><span>Book online 24/7</span></div>
+    ${has('floatBook')?'<button class="float">Book Now</button>':''}
+    ${has('liveChat')?'<button class="chatbtn">💬</button>':''}
+  `;
+
+  document.getElementById('urlName').textContent=slug(state.biz);
+  const sa=document.getElementById('seeAll');
+  if(sa)sa.onclick=()=>{showAllSvc=!showAllSvc;renderSite();};
+}
+
+function renderAll(){renderPanel();renderSite();}
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2400);}
+
+document.getElementById('bizName').addEventListener('input',e=>{state.biz=e.target.value||'Your Business';renderSite();});
+document.getElementById('dDesk').onclick=()=>{document.getElementById('frame').classList.remove('mobile');document.getElementById('dDesk').classList.add('on');document.getElementById('dMob').classList.remove('on');};
+document.getElementById('dMob').onclick=()=>{document.getElementById('frame').classList.add('mobile');document.getElementById('dMob').classList.add('on');document.getElementById('dDesk').classList.remove('on');};
+document.getElementById('publish').onclick=()=>toast('Published to '+slug(state.biz)+'.bookkit.site');
+
+initState('braider');
+renderAll();
+</script>
+</body>
+</html>

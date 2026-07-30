@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookKit — Confirm & Intake</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141519;--paper:#f6f7f9;--card:#fff;--line:#e6e8ec;--line2:#eef0f3;
+    --muted:#6b7280;--faint:#9aa1ab;--accent:#4f46e5;--accent-soft:#eef0fe;
+    --ok:#16a34a;--ok-soft:#e7f6ec;--warn:#b45309;--warn-soft:#fdf3e3;--pop:#ff6b4a;
+    --radius:14px;--shadow:0 1px 2px rgba(20,21,25,.05),0 10px 34px rgba(20,21,25,.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5;padding:24px 16px 60px}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  .shell{max-width:560px;margin:0 auto}
+
+  .top{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .brand{font-family:'Space Grotesk';font-weight:700;font-size:16px;display:inline-flex;gap:8px;align-items:center}
+  .brand .dot{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--pop));display:grid;place-items:center;color:#fff;font-size:12px}
+  .prof-switch{margin-left:auto;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
+  .prof-switch select{background:#fff;border:1px solid var(--line);border-radius:9px;padding:6px 10px;font-family:inherit;font-size:12.5px}
+
+  .progress{display:flex;align-items:center;gap:6px;margin-bottom:18px;font-size:11px;color:var(--faint);font-weight:600}
+  .progress .p{display:flex;align-items:center;gap:6px}
+  .progress .p.done{color:var(--accent)} .progress .p.on{color:var(--ink)}
+  .progress .num{width:20px;height:20px;border-radius:50%;border:1.5px solid currentColor;display:grid;place-items:center;font-size:10px}
+  .progress .p.done .num,.progress .p.on .num{background:var(--accent);border-color:var(--accent);color:#fff}
+  .progress .bar{width:20px;height:1.5px;background:var(--line)}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+  .booking-summary{padding:18px 20px;display:flex;gap:14px;align-items:center;border-bottom:1px solid var(--line2);background:linear-gradient(180deg,#fbfbfd,#fff)}
+  .bs-badge{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;font-size:22px;color:#fff;flex-shrink:0}
+  .bs-info .svc{font-weight:700;font-size:15px}
+  .bs-info .meta{font-size:12.5px;color:var(--muted);margin-top:2px;display:flex;gap:10px;flex-wrap:wrap}
+  .bs-info .meta b{color:var(--ink);font-weight:600}
+  .bs-price{margin-left:auto;text-align:right}
+  .bs-price .amt{font-family:'Space Grotesk';font-weight:700;font-size:20px}
+  .bs-price .lbl{font-size:11px;color:var(--muted)}
+
+  .body{padding:20px}
+  .step{display:none;animation:fade .3s ease}
+  .step.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  h3{font-family:'Space Grotesk';font-size:17px;font-weight:600;margin-bottom:3px}
+  .sub{font-size:13px;color:var(--muted);margin-bottom:16px}
+
+  .field{margin-bottom:14px}
+  .field label{font-size:12px;font-weight:600;color:var(--ink);display:block;margin-bottom:6px}
+  .field label .opt{color:var(--faint);font-weight:500}
+  .field input,.field textarea,.field select{width:100%;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--ink);font-family:inherit;font-size:14px;outline:none;transition:.12s}
+  .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .field textarea{resize:vertical;min-height:70px}
+  .field .err{border-color:var(--pop)}
+  .field .msg{font-size:11.5px;color:var(--pop);margin-top:5px;display:none}
+  .field .msg.show{display:block}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{padding:8px 13px;border:1px solid var(--line);border-radius:100px;font-size:13px;font-weight:500;background:#fff;transition:.12s}
+  .chip:hover{border-color:#c9cdd4}
+  .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .upload{border:1.5px dashed var(--line);border-radius:12px;padding:20px;text-align:center;color:var(--muted);font-size:13px;cursor:pointer;transition:.12s}
+  .upload:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+  .upload .ic{font-size:22px;display:block;margin-bottom:6px}
+  .thumbs{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+  .thumb{width:52px;height:52px;border-radius:9px;background:var(--accent-soft);border:1px solid var(--line);display:grid;place-items:center;font-size:18px;position:relative}
+  .thumb button{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--ink);color:#fff;font-size:11px;display:grid;place-items:center}
+
+  .deposit-box{background:var(--warn-soft);border:1px solid #f2ddb5;border-radius:12px;padding:14px;margin-bottom:14px;display:flex;gap:12px;align-items:flex-start}
+  .deposit-box .di{font-size:18px}
+  .deposit-box .dt{font-size:13px}
+  .deposit-box .dt b{font-weight:700}
+  .deposit-box .dt .fine{color:var(--warn);font-size:11.5px;margin-top:3px}
+
+  .consent{display:flex;gap:10px;align-items:flex-start;padding:11px 0;font-size:12.5px;color:var(--ink)}
+  .consent input{width:18px;height:18px;margin-top:1px;flex-shrink:0;accent-color:var(--accent)}
+  .consent a{color:var(--accent);text-decoration:underline}
+
+  .reminders{background:var(--paper);border-radius:12px;padding:14px;margin-top:6px}
+  .reminders .rh{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+  .rem-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+  .rem-row .rl{font-size:13px}
+  .rem-row .rl .rd{font-size:11.5px;color:var(--muted)}
+  .sw{width:40px;height:23px;border-radius:100px;background:var(--line);position:relative;transition:.15s;flex-shrink:0;cursor:pointer}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .sw.on{background:var(--ok)}.sw.on::after{transform:translateX(17px)}
+
+  .foot{padding:16px 20px;border-top:1px solid var(--line2);display:flex;gap:10px;background:var(--paper)}
+  .btn{flex:1;padding:13px;border-radius:100px;font-weight:600;font-size:14.5px;transition:.15s;border:1px solid var(--line);background:#fff}
+  .btn:hover{border-color:#c9cdd4}
+  .btn.primary{flex:1.7;background:var(--ink);color:#fff;border-color:var(--ink)}
+  .btn.primary:hover{background:var(--accent)}
+  .btn.primary:disabled{opacity:.4;cursor:not-allowed}
+
+  .success{text-align:center;padding:12px 8px}
+  .success .big{width:70px;height:70px;border-radius:50%;background:var(--ok-soft);display:grid;place-items:center;font-size:34px;margin:0 auto 16px;color:var(--ok)}
+  .success h3{font-size:21px}
+  .success .conf{font-size:13px;color:var(--muted);margin-top:6px}
+  .success .card-mini{background:var(--paper);border-radius:12px;padding:14px;margin:18px 0;text-align:left;font-size:13px}
+  .success .card-mini .r{display:flex;justify-content:space-between;padding:5px 0}
+  .success .card-mini .r .l{color:var(--muted)}
+  .success .actions{display:flex;gap:10px}
+  .success .actions .btn{flex:1}
+
+  .footnote{font-size:11.5px;color:var(--faint);text-align:center;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="top">
+    <div class="brand"><span class="dot">✦</span> BookKit</div>
+    <div class="prof-switch">
+      Preview as
+      <select id="prof">
+        <option value="barber">Barber</option>
+        <option value="braider">Braider</option>
+        <option value="loctician">Loctician</option>
+        <option value="nail">Nail studio</option>
+        <option value="tattoo">Tattoo</option>
+        <option value="spa">Esthetician / Spa</option>
+        <option value="massage">Massage</option>
+        <option value="makeup">Makeup artist</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="progress" id="progress"></div>
+
+  <div class="card">
+    <div class="booking-summary">
+      <div class="bs-badge" id="bsBadge">✂</div>
+      <div class="bs-info">
+        <div class="svc" id="bsSvc">Skin Fade + Beard</div>
+        <div class="meta" id="bsMeta"></div>
+      </div>
+      <div class="bs-price">
+        <div class="amt" id="bsPrice">$55</div>
+        <div class="lbl" id="bsPriceLbl">total</div>
+      </div>
+    </div>
+
+    <div class="body">
+      <!-- STEP 1: details + intake -->
+      <div class="step on" id="step1"></div>
+      <!-- STEP 2: deposit + consent + reminders -->
+      <div class="step" id="step2"></div>
+      <!-- STEP 3: success -->
+      <div class="step" id="step3"></div>
+    </div>
+
+    <div class="foot" id="foot"></div>
+  </div>
+
+  <div class="footnote">Times shown in your local timezone · you can reschedule free up to the cutoff</div>
+</div>
+
+<script>
+// ---- profession intake config (grounded in researched norms) ----
+const CFG={
+  barber:{icon:"✂",color:"#c8a24a",svc:"Skin Fade + Beard",price:55,dur:60,staff:"Marcus",
+    intake:[], // barbers rarely need intake
+    deposit:0, consult:false, upload:false, reminderLead:"2 hours"},
+  braider:{icon:"🪢",color:"#e0a92e",svc:"Knotless Box Braids (medium)",price:220,dur:360,staff:"Nia",
+    intake:[
+      {id:"hairincl",label:"Hair",type:"chip",opts:["Include hair (+$0)","I'll bring my own"]},
+      {id:"length",label:"Length",type:"chip",opts:["Shoulder","Bra","Waist","Butt-length (+$30)"]},
+      {id:"size",label:"Braid size",type:"chip",opts:["Small","Medium","Large","Jumbo"]},
+      {id:"color",label:"Hair color add-on",type:"chip",opts:["Natural (1/1B/2/4)","Color (+$10)","Ombré (+$25)"]},
+    ],
+    deposit:75, consult:false, upload:true, uploadLabel:"Add an inspo photo (optional)", reminderLead:"1 day"},
+  loctician:{icon:"🌀",color:"#8a6d3b",svc:"Loc Retwist + Style",price:135,dur:120,staff:"Dime",
+    intake:[
+      {id:"locstage",label:"Loc stage",type:"chip",opts:["Starter","Budding","Teen","Mature"]},
+      {id:"length",label:"Length / density",type:"chip",opts:["Short","Medium","Long / thick (+quote)"]},
+      {id:"addon",label:"Add-ons",type:"chip",opts:["Basic style","Two-strand twist (+$)","Boho (+$)"]},
+    ],
+    deposit:50, consult:true, consultNote:"Starter locs require a consultation before booking.", upload:true, uploadLabel:"Add a photo of your current locs", reminderLead:"1 day"},
+  nail:{icon:"💅",color:"#ff4d94",svc:"Gel Set + Nail Art",price:70,dur:75,staff:"Kim",
+    intake:[
+      {id:"type",label:"Type",type:"chip",opts:["Gel","Acrylic","Dip","Polygel"]},
+      {id:"shape",label:"Shape",type:"chip",opts:["Square","Almond","Coffin","Stiletto"]},
+      {id:"length",label:"Length",type:"chip",opts:["Short","Medium","Long","XL"]},
+      {id:"removal",label:"Removal needed?",type:"chip",opts:["No","Yes, soak-off (+15 min)"]},
+    ],
+    deposit:20, consult:false, upload:true, uploadLabel:"Add a design reference (optional)", reminderLead:"1 day"},
+  tattoo:{icon:"🎨",color:"#e63946",svc:"Custom Fine Line",price:300,dur:120,staff:"Ink B",
+    intake:[
+      {id:"placement",label:"Placement",type:"chip",opts:["Arm","Leg","Back","Chest","Hand","Other"]},
+      {id:"size",label:"Approx size",type:"chip",opts:["Under 3in","3–6in","6–10in","Larger"]},
+      {id:"color",label:"Style",type:"chip",opts:["Black & grey","Color","Fine line"]},
+    ],
+    deposit:100, consult:true, consultNote:"A consultation is required before your session is confirmed.",
+    upload:true, uploadLabel:"Upload reference & placement photos", uploadRequired:true, reminderLead:"2 days"},
+  spa:{icon:"🧖",color:"#4f8f76",svc:"Signature Facial (60 min)",price:120,dur:60,staff:"Ivy",
+    intake:[
+      {id:"skin",label:"Skin type",type:"chip",opts:["Normal","Dry","Oily","Combination","Sensitive"]},
+      {id:"concern",label:"Main concern",type:"chip",opts:["Acne","Aging","Dryness","Texture","Redness"]},
+      {id:"preg",label:"Pregnant / nursing?",type:"chip",opts:["No","Yes"]},
+      {id:"allergy",label:"Allergies or sensitivities",type:"text",ph:"e.g. retinol, fragrance — or 'none'"},
+    ],
+    deposit:0, consult:false, medical:true, upload:false, reminderLead:"1 day"},
+  massage:{icon:"💆",color:"#5a7ea6",svc:"Deep Tissue (60 min)",price:110,dur:60,staff:"Rob",
+    intake:[
+      {id:"pressure",label:"Pressure preference",type:"chip",opts:["Light","Medium","Firm","Deep"]},
+      {id:"focus",label:"Focus areas",type:"chipmulti",opts:["Neck","Shoulders","Back","Lower back","Legs","Feet"]},
+      {id:"conditions",label:"Injuries or conditions we should know about",type:"text",ph:"e.g. lower-back strain, pregnancy — or 'none'"},
+      {id:"preg",label:"Pregnant?",type:"chip",opts:["No","Yes (prenatal)"]},
+    ],
+    deposit:0, consult:false, medical:true, upload:false, reminderLead:"1 day"},
+  makeup:{icon:"💄",color:"#c25b7c",svc:"Bridal Trial",price:150,dur:90,staff:"Mel",
+    intake:[
+      {id:"event",label:"Occasion",type:"chip",opts:["Bridal","Bridesmaid","Photoshoot","Event"]},
+      {id:"look",label:"Look",type:"chip",opts:["Natural","Soft glam","Full glam","Editorial"]},
+      {id:"location",label:"Where",type:"chip",opts:["In studio","On location (+travel)"]},
+      {id:"lashes",label:"Lashes",type:"chip",opts:["Include","Skip"]},
+    ],
+    deposit:50, consult:false, upload:true, uploadLabel:"Add inspiration photos (optional)", reminderLead:"2 days"},
+};
+
+let curKey='barber', stepNum=1;
+const form={name:'',phone:'',email:'',notes:'',intake:{},photos:[],consult:false,agreed:false,
+  reminders:{sms:true,email:true,confirm:true}};
+const STEPS=["Details","Confirm","Booked"];
+
+function money(n){return n===0?'Free':'$'+n;}
+function durLabel(m){if(m<60)return m+' min';const h=Math.floor(m/60),mm=m%60;return mm?`${h}h ${mm}m`:`${h}h`;}
+
+function renderProgress(){
+  document.getElementById('progress').innerHTML=STEPS.map((s,i)=>{
+    const n=i+1;const cls=n<stepNum?'done':n===stepNum?'on':'';
+    return `<span class="p ${cls}"><span class="num">${n<stepNum?'✓':n}</span>${s}</span>`+(i<STEPS.length-1?'<span class="bar"></span>':'');
+  }).join('');
+}
+
+function renderSummary(){
+  const c=CFG[curKey];
+  document.getElementById('bsBadge').textContent=c.icon;
+  document.getElementById('bsBadge').style.background=c.color;
+  document.getElementById('bsSvc').textContent=c.svc;
+  document.getElementById('bsMeta').innerHTML=`<span>🕐 <b>${durLabel(c.dur)}</b></span><span>with <b>${c.staff}</b></span><span>Sat, 2:30 PM</span>`;
+  document.getElementById('bsPrice').textContent=money(c.price);
+  document.getElementById('bsPriceLbl').textContent=c.deposit>0?`${money(c.deposit)} deposit today`:'total';
+}
+
+function chipGroup(f){
+  return `<div class="field"><label>${f.label}</label><div class="chips" data-id="${f.id}" data-multi="${f.type==='chipmulti'}">
+    ${f.opts.map(o=>`<button class="chip" data-v="${o}">${o}</button>`).join('')}</div></div>`;
+}
+
+function renderStep1(){
+  const c=CFG[curKey];
+  let html=`<h3>Your details</h3><div class="sub">We'll use this to confirm and send reminders.</div>
+    <div class="field"><label>Full name</label><input id="f-name" value="${form.name}" placeholder="Jordan Powell"><div class="msg" id="m-name">Enter your name so we know who's booked.</div></div>
+    <div class="row2">
+      <div class="field"><label>Mobile</label><input id="f-phone" value="${form.phone}" placeholder="(555) 012-3456" inputmode="tel"><div class="msg" id="m-phone">We text your reminder here.</div></div>
+      <div class="field"><label>Email <span class="opt">optional</span></label><input id="f-email" value="${form.email}" placeholder="you@email.com" inputmode="email"></div>
+    </div>`;
+
+  if(c.consult){
+    html+=`<div class="deposit-box" style="background:var(--accent-soft);border-color:#c7c9f7">
+      <span class="di">💬</span><div class="dt"><b>Consultation first.</b> ${c.consultNote} <div class="fine" style="color:var(--accent)">You're booking the consult now — the main appointment is scheduled after.</div></div></div>`;
+  }
+
+  if(c.intake.length){
+    html+=`<h3 style="margin-top:6px">${c.medical?'Health intake':'Style details'}</h3><div class="sub">${c.medical?'Kept private, shared only with your provider.':'Helps your provider prep before you arrive.'}</div>`;
+    c.intake.forEach(f=>{
+      if(f.type==='text'){
+        html+=`<div class="field"><label>${f.label}</label><textarea id="i-${f.id}" placeholder="${f.ph||''}">${form.intake[f.id]||''}</textarea></div>`;
+      }else{
+        html+=chipGroup(f);
+      }
+    });
+  }
+
+  if(c.upload){
+    const req=c.uploadRequired;
+    html+=`<div class="field"><label>${c.uploadLabel}${req?'':' '}${req?'':'<span class="opt"> optional</span>'}</label>
+      <div class="upload" id="uploader"><span class="ic">📷</span>Tap to add photos</div>
+      <div class="thumbs" id="thumbs"></div>
+      <div class="msg" id="m-upload">Add at least one reference so your artist can prepare.</div></div>`;
+  }
+
+  html+=`<div class="field"><label>Anything else? <span class="opt">optional</span></label><textarea id="f-notes" placeholder="Parking, allergies, requests…">${form.notes}</textarea></div>`;
+
+  document.getElementById('step1').innerHTML=html;
+
+  // wire chips
+  document.querySelectorAll('#step1 .chips').forEach(g=>{
+    const id=g.dataset.id, multi=g.dataset.multi==='true';
+    g.querySelectorAll('.chip').forEach(ch=>{
+      const v=ch.dataset.v;
+      const cur=form.intake[id];
+      if(multi){if(Array.isArray(cur)&&cur.includes(v))ch.classList.add('on');}
+      else if(cur===v)ch.classList.add('on');
+      ch.onclick=()=>{
+        if(multi){
+          let arr=Array.isArray(form.intake[id])?form.intake[id]:[];
+          if(arr.includes(v)){arr=arr.filter(x=>x!==v);ch.classList.remove('on');}
+          else{arr.push(v);ch.classList.add('on');}
+          form.intake[id]=arr;
+        }else{
+          g.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+          ch.classList.add('on');form.intake[id]=v;
+        }
+      };
+    });
+  });
+
+  // uploader (simulated)
+  const up=document.getElementById('uploader');
+  if(up){
+    renderThumbs();
+    up.onclick=()=>{form.photos.push('📎');renderThumbs();document.getElementById('m-upload').classList.remove('show');};
+  }
+}
+function renderThumbs(){
+  const t=document.getElementById('thumbs'); if(!t)return;
+  t.innerHTML=form.photos.map((p,i)=>`<div class="thumb">${p}<button data-i="${i}">✕</button></div>`).join('');
+  t.querySelectorAll('button').forEach(b=>b.onclick=()=>{form.photos.splice(+b.dataset.i,1);renderThumbs();});
+}
+
+function renderStep2(){
+  const c=CFG[curKey];
+  let html=`<h3>Confirm your booking</h3><div class="sub">Last step — review and lock it in.</div>`;
+
+  if(c.deposit>0){
+    html+=`<div class="deposit-box"><span class="di">💳</span><div class="dt">
+      <b>${money(c.deposit)} deposit due now</b> to secure your ${c.consult?'consultation':'appointment'}.
+      <div class="fine">Applied to your ${money(c.price)} total. Non-refundable if you cancel with less than 48 hours' notice.</div></div></div>
+      <div class="field"><label>Card number</label><input placeholder="•••• •••• •••• ••••" inputmode="numeric"></div>
+      <div class="row2"><div class="field"><label>Expiry</label><input placeholder="MM/YY"></div><div class="field"><label>CVC</label><input placeholder="123"></div></div>`;
+  }
+
+  html+=`<div class="reminders"><div class="rh">Reminders</div>
+    <div class="rem-row"><div class="rl">Booking confirmation<div class="rd">Right now, by text + email</div></div><div class="sw on" data-r="confirm"></div></div>
+    <div class="rem-row"><div class="rl">SMS reminder<div class="rd">${c.reminderLead} before your appointment</div></div><div class="sw ${form.reminders.sms?'on':''}" data-r="sms"></div></div>
+    <div class="rem-row"><div class="rl">Email reminder<div class="rd">Morning of your appointment</div></div><div class="sw ${form.reminders.email?'on':''}" data-r="email"></div></div>
+  </div>`;
+
+  html+=`<label class="consent"><input type="checkbox" id="agree" ${form.agreed?'checked':''}>
+    <span>I agree to the <a href="#">cancellation policy</a>${c.medical?' and confirm my health information is accurate':''}${c.deposit>0?', and authorize the deposit charge':''}.</span></label>`;
+
+  document.getElementById('step2').innerHTML=html;
+
+  document.querySelectorAll('#step2 .sw').forEach(s=>s.onclick=()=>{
+    s.classList.toggle('on');const r=s.dataset.r;form.reminders[r]=s.classList.contains('on');
+  });
+  document.getElementById('agree').onchange=e=>{form.agreed=e.target.checked;updateFoot();};
+}
+
+function renderStep3(){
+  const c=CFG[curKey];
+  const conf='BK-'+Math.random().toString(36).slice(2,7).toUpperCase();
+  document.getElementById('step3').innerHTML=`
+    <div class="success">
+      <div class="big">✓</div>
+      <h3>${c.consult?'Consultation booked':'You\'re booked'}</h3>
+      <div class="conf">Confirmation <b>${conf}</b> sent to ${form.email||form.phone||'you'}</div>
+      <div class="card-mini">
+        <div class="r"><span class="l">Service</span><span>${c.svc}</span></div>
+        <div class="r"><span class="l">With</span><span>${c.staff}</span></div>
+        <div class="r"><span class="l">When</span><span>Sat, 2:30 PM · ${durLabel(c.dur)}</span></div>
+        ${c.deposit>0?`<div class="r"><span class="l">Deposit paid</span><span>${money(c.deposit)}</span></div><div class="r"><span class="l">Balance at visit</span><span>${money(c.price-c.deposit)}</span></div>`:`<div class="r"><span class="l">Total</span><span>${money(c.price)}</span></div>`}
+        <div class="r"><span class="l">Reminder</span><span>${c.reminderLead} before</span></div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="addCal">Add to calendar</button>
+        <button class="btn primary" id="done">Done</button>
+      </div>
+    </div>`;
+  document.getElementById('addCal').onclick=()=>toast('Added to your calendar');
+  document.getElementById('done').onclick=()=>{stepNum=1;form.agreed=false;go();};
+}
+
+function updateFoot(){
+  const foot=document.getElementById('foot');
+  if(stepNum===1){
+    foot.innerHTML=`<button class="btn" id="cancel">Cancel</button><button class="btn primary" id="next">Continue</button>`;
+    document.getElementById('cancel').onclick=()=>toast('Booking cancelled');
+    document.getElementById('next').onclick=validateStep1;
+  }else if(stepNum===2){
+    const c=CFG[curKey];
+    foot.innerHTML=`<button class="btn" id="back">Back</button><button class="btn primary" id="confirm" ${form.agreed?'':'disabled'}>${c.deposit>0?`Pay ${money(c.deposit)} & book`:'Confirm booking'}</button>`;
+    document.getElementById('back').onclick=()=>{stepNum=1;go();};
+    document.getElementById('confirm').onclick=()=>{stepNum=3;go();};
+  }else{
+    foot.innerHTML='';foot.style.display='none';return;
+  }
+  foot.style.display='flex';
+}
+
+function validateStep1(){
+  const c=CFG[curKey];
+  // capture
+  form.name=val('f-name');form.phone=val('f-phone');form.email=val('f-email');form.notes=val('f-notes');
+  c.intake.forEach(f=>{if(f.type==='text')form.intake[f.id]=val('i-'+f.id);});
+  let ok=true;
+  if(!form.name.trim()){flag('name');ok=false;}
+  if(!form.phone.trim()){flag('phone');ok=false;}
+  if(c.uploadRequired&&form.photos.length===0){document.getElementById('m-upload').classList.add('show');ok=false;}
+  if(!ok){toast('Add the highlighted details to continue');return;}
+  stepNum=2;go();
+}
+function val(id){const e=document.getElementById(id);return e?e.value:'';}
+function flag(name){const i=document.getElementById('f-'+name),m=document.getElementById('m-'+name);if(i)i.classList.add('err');if(m)m.classList.add('show');}
+
+function go(){
+  renderProgress();
+  ['step1','step2','step3'].forEach((s,i)=>document.getElementById(s).classList.toggle('on',i+1===stepNum));
+  if(stepNum===1)renderStep1();
+  if(stepNum===2)renderStep2();
+  if(stepNum===3)renderStep3();
+  updateFoot();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function load(key){
+  curKey=key;stepNum=1;
+  form.name='';form.phone='';form.email='';form.notes='';form.intake={};form.photos=[];form.agreed=false;
+  form.reminders={sms:true,email:true,confirm:true};
+  renderSummary();go();
+}
+document.getElementById('prof').onchange=e=>load(e.target.value);
+
+let toastEl;
+function toast(m){
+  if(!toastEl){toastEl=document.createElement('div');toastEl.style.cssText='position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);background:#141519;color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;box-shadow:0 16px 40px rgba(0,0,0,.3);opacity:0;transition:.24s;z-index:50';document.body.appendChild(toastEl);}
+  toastEl.textContent=m;toastEl.style.opacity='1';toastEl.style.transform='translate(-50%,0)';
+  clearTimeout(toastEl._t);toastEl._t=setTimeout(()=>{toastEl.style.opacity='0';toastEl.style.transform='translate(-50%,16px)';},2400);
+}
+
+load('barber');
+</script>
+</body>
+</html>

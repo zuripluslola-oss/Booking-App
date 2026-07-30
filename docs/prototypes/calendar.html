@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookKit Calendar — Smarter Slots</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141519; --paper:#f6f7f9; --card:#ffffff; --line:#e6e8ec; --line2:#eef0f3;
+    --muted:#6b7280; --faint:#9aa1ab;
+    --accent:#4f46e5; --accent-soft:#eef0fe; --accent-ring:#c7c9f7;
+    --ok:#16a34a; --ok-soft:#e7f6ec; --warn:#b45309; --warn-soft:#fdf3e3;
+    --pop:#ff6b4a;
+    --radius:14px; --shadow:0 1px 2px rgba(20,21,25,.05),0 10px 34px rgba(20,21,25,.07);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5;padding:26px 16px 60px}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  .shell{max-width:940px;margin:0 auto}
+
+  .masthead{margin-bottom:22px}
+  .brand{font-family:'Space Grotesk';font-weight:700;font-size:16px;display:inline-flex;gap:8px;align-items:center;letter-spacing:-.01em}
+  .brand .dot{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--pop));display:grid;place-items:center;color:#fff;font-size:12px}
+  .masthead h1{font-family:'Space Grotesk';font-size:26px;font-weight:700;letter-spacing:-.02em;margin-top:14px}
+  .masthead p{color:var(--muted);font-size:14.5px;margin-top:4px;max-width:64ch}
+
+  /* the booking card */
+  .booking{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden;margin-top:22px}
+  .booking-head{display:flex;align-items:center;gap:14px;padding:18px 22px;border-bottom:1px solid var(--line2)}
+  .avatar{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#3b2fd6,#7c6cf5);display:grid;place-items:center;color:#fff;font-weight:700;font-size:17px;flex-shrink:0}
+  .bh-info .svc{font-weight:600;font-size:15px}
+  .bh-info .meta{font-size:13px;color:var(--muted);display:flex;gap:12px;flex-wrap:wrap;margin-top:2px}
+  .bh-info .meta span{display:inline-flex;gap:5px;align-items:center}
+  .bh-right{margin-left:auto;text-align:right}
+  .tz{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;background:var(--paper);border:1px solid var(--line);padding:6px 10px;border-radius:100px;cursor:pointer}
+  .tz b{color:var(--ink);font-weight:600}
+
+  .body{display:grid;grid-template-columns:1.15fr 1fr;gap:0}
+  @media(max-width:760px){.body{grid-template-columns:1fr}}
+
+  /* calendar side */
+  .cal{padding:20px 22px;border-right:1px solid var(--line2)}
+  @media(max-width:760px){.cal{border-right:none;border-bottom:1px solid var(--line2)}}
+  .cal-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .cal-top .mo{font-weight:600;font-size:15px}
+  .nav{display:flex;gap:6px}
+  .nav button{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;color:var(--muted);transition:.14s}
+  .nav button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+  .nav button:disabled{opacity:.35;cursor:not-allowed}
+  .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
+  .dow span{text-align:center;font-size:11px;font-weight:600;color:var(--faint);letter-spacing:.03em}
+  .days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .day{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;position:relative;border:1px solid transparent;transition:.12s}
+  .day.blank{visibility:hidden}
+  .day.avail{background:var(--card);color:var(--ink);cursor:pointer;border-color:var(--line)}
+  .day.avail:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .day.avail::after{content:"";position:absolute;bottom:6px;width:4px;height:4px;border-radius:50%;background:var(--accent)}
+  .day.soon::after{background:var(--pop)}
+  .day.full{color:var(--faint);cursor:not-allowed}
+  .day.full::after{content:"";position:absolute;bottom:6px;width:10px;height:2px;border-radius:2px;background:var(--line)}
+  .day.past{color:#d0d4da;cursor:not-allowed}
+  .day.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .day.sel::after{background:#fff}
+  .day.today{box-shadow:inset 0 0 0 1.5px var(--accent-ring)}
+  .legend{display:flex;gap:14px;margin-top:14px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
+  .legend i{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+
+  /* slots side */
+  .slots{padding:20px 22px;display:flex;flex-direction:column;min-height:360px}
+  .slots-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+  .slots-head .d{font-weight:600;font-size:15px}
+  .slots-head .c{font-size:12px;color:var(--muted)}
+  .period-tabs{display:flex;gap:6px;margin:14px 0 12px}
+  .period-tabs button{flex:1;padding:7px;border-radius:9px;border:1px solid var(--line);background:var(--card);font-size:12.5px;font-weight:600;color:var(--muted);transition:.12s}
+  .period-tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .period-tabs button:disabled{opacity:.4;cursor:not-allowed}
+  .slot-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;overflow-y:auto}
+  @media(max-width:760px){.slot-grid{grid-template-columns:repeat(4,1fr)}}
+  .slot{padding:11px 4px;border-radius:10px;border:1px solid var(--line);background:var(--card);font-size:13.5px;font-weight:600;text-align:center;transition:.12s;position:relative}
+  .slot.open:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+  .slot.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .slot.taken{color:var(--faint);cursor:not-allowed;background:var(--paper);text-decoration:line-through;text-decoration-color:var(--line)}
+  .slot.taken:hover{border-color:var(--pop)}
+  .slot.scarce::before{content:"";position:absolute;top:-4px;right:-4px;width:9px;height:9px;border-radius:50%;background:var(--pop);border:2px solid var(--card)}
+
+  .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--muted);gap:10px;padding:20px}
+  .empty .big{font-size:34px}
+  .empty .sug{margin-top:6px;padding:9px 16px;border-radius:100px;background:var(--accent);color:#fff;font-weight:600;font-size:13px}
+
+  /* frustration -> fix tooltip */
+  .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;display:flex;gap:12px;align-items:center;box-shadow:0 12px 40px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:.24s;max-width:92vw;z-index:50}
+  .toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+  .toast b{color:#fff}
+  .toast button{background:var(--pop);color:#fff;padding:6px 12px;border-radius:8px;font-weight:600;font-size:12.5px;white-space:nowrap}
+
+  /* summary footer */
+  .foot{padding:16px 22px;border-top:1px solid var(--line2);display:flex;align-items:center;gap:14px;background:var(--paper)}
+  .foot .pick{font-size:13.5px;color:var(--muted);flex:1}
+  .foot .pick b{color:var(--ink);font-weight:600}
+  .foot .buffer{font-size:11.5px;color:var(--warn);background:var(--warn-soft);padding:5px 10px;border-radius:8px;font-weight:600;display:none}
+  .foot .buffer.on{display:inline-block}
+  .confirm{background:var(--ink);color:#fff;padding:12px 24px;border-radius:100px;font-weight:600;font-size:14.5px;transition:.15s}
+  .confirm:disabled{opacity:.4;cursor:not-allowed}
+  .confirm:not(:disabled):hover{background:var(--accent)}
+
+  /* analysis section */
+  .analysis{margin-top:34px}
+  .analysis h2{font-family:'Space Grotesk';font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:14px}
+  .cmp{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.cmp{grid-template-columns:1fr}}
+  .cmp-col{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .cmp-col h3{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .cmp-col.bad h3{color:var(--warn)}
+  .cmp-col.good h3{color:var(--ok)}
+  .cmp-col ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+  .cmp-col li{font-size:13px;color:var(--ink);display:flex;gap:9px;line-height:1.4}
+  .cmp-col li .m{flex-shrink:0;font-weight:700}
+  .cmp-col.bad .m{color:var(--warn)}
+  .cmp-col.good .m{color:var(--ok)}
+  .cmp-col li small{color:var(--muted);display:block}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="masthead">
+    <div class="brand"><span class="dot">✦</span> BookKit</div>
+    <h1>A booking calendar that behaves better</h1>
+    <p>Built on what the best schedulers (Calendly, Acuity, Square) get right — one screen for date + time, only bookable slots shown, auto timezone — and fixes for what they get wrong: dead unavailable slots, no scarcity cues, no buffers, no next-slot rescue. Try clicking a full day or a taken slot.</p>
+  </div>
+
+  <div class="booking">
+    <div class="booking-head">
+      <div class="avatar">M</div>
+      <div class="bh-info">
+        <div class="svc">Skin Fade + Beard — with Marcus</div>
+        <div class="meta">
+          <span>⏱ 45 min</span>
+          <span>＄40</span>
+          <span>📍 Downtown chair</span>
+        </div>
+      </div>
+      <div class="bh-right">
+        <button class="tz" id="tzBtn">🌐 Times in <b id="tzName">your timezone</b> ▾</button>
+      </div>
+    </div>
+
+    <div class="body">
+      <div class="cal">
+        <div class="cal-top">
+          <div class="mo" id="moLabel">Month</div>
+          <div class="nav">
+            <button id="prev" aria-label="Previous month">‹</button>
+            <button id="next" aria-label="Next month">›</button>
+          </div>
+        </div>
+        <div class="dow"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div>
+        <div class="days" id="days"></div>
+        <div class="legend">
+          <span><i style="background:var(--accent)"></i>Available</span>
+          <span><i style="background:var(--pop)"></i>Filling up</span>
+          <span><i style="background:var(--line);width:10px;height:2px;border-radius:2px"></i>Fully booked</span>
+        </div>
+      </div>
+
+      <div class="slots" id="slotsPane">
+        <div class="empty" id="emptyState">
+          <div class="big">🗓️</div>
+          <div>Pick a day with availability to see open times.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div class="pick" id="pickText">No time selected yet.</div>
+      <span class="buffer" id="bufferNote">＋10 min buffer added</span>
+      <button class="confirm" id="confirmBtn" disabled>Confirm booking</button>
+    </div>
+  </div>
+
+  <div class="analysis">
+    <h2>What we fixed vs. typical booking calendars</h2>
+    <div class="cmp">
+      <div class="cmp-col bad">
+        <h3>⚠ Common frustrations</h3>
+        <ul>
+          <li><span class="m">✕</span><div>Dead unavailable slots — you click, nothing happens, no reason given <small>drives "rage clicks"</small></div></li>
+          <li><span class="m">✕</span><div>No sense of scarcity — you don't know a slot is the last one until it's gone</div></li>
+          <li><span class="m">✕</span><div>Native mobile spinner pickers that feel like a slot machine</div></li>
+          <li><span class="m">✕</span><div>Implicit timezones — confirmation shows the wrong time across zones</div></li>
+          <li><span class="m">✕</span><div>Back-to-back bookings with no buffer, so the provider runs late all day</div></li>
+        </ul>
+      </div>
+      <div class="cmp-col good">
+        <h3>✓ How this one behaves</h3>
+        <ul>
+          <li><span class="m">✓</span><div>Taken slots explain themselves and offer the next open time in one tap</div></li>
+          <li><span class="m">✓</span><div>"Filling up" dot + last-slot pulse so people book before it's gone</div></li>
+          <li><span class="m">✓</span><div>Tap-target grid (no spinners) — date + time on one screen, 3-tap flow</div></li>
+          <li><span class="m">✓</span><div>Timezone shown up front and echoed in the summary, explicitly</div></li>
+          <li><span class="m">✓</span><div>Automatic buffer padding added after the appointment, shown to the client</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span id="toastMsg"></span>
+  <button id="toastAction">Show it</button>
+</div>
+
+<script>
+const DAYMS=86400000;
+const today=new Date(); today.setHours(0,0,0,0);
+let view=new Date(today.getFullYear(),today.getMonth(),1);
+let selDay=null, selSlot=null, curPeriod='morning';
+
+// deterministic pseudo-random per date so state is stable
+function seeded(n){let x=Math.sin(n)*10000;return x-Math.floor(x);}
+function dayState(d){
+  if(d<today) return 'past';
+  const key=d.getFullYear()*372+d.getMonth()*31+d.getDate();
+  const dow=d.getDay();
+  if(dow===0) return 'full'; // closed Sundays
+  const r=seeded(key);
+  if(r<0.18) return 'full';
+  if(r<0.42) return 'soon'; // filling up
+  return 'avail';
+}
+// generate slots for a day; some taken
+function slotsFor(d,period){
+  const key=d.getFullYear()*372+d.getMonth()*31+d.getDate();
+  const ranges={morning:[9,12],afternoon:[12,17],evening:[17,20]};
+  const [a,b]=ranges[period];
+  const out=[];
+  for(let h=a;h<b;h++){
+    for(let m of [0,30]){
+      const r=seeded(key*97+h*7+m);
+      const taken=r<0.4;
+      out.push({h,m,taken});
+    }
+  }
+  return out;
+}
+function periodAvail(d){
+  const st={};
+  ['morning','afternoon','evening'].forEach(p=>{
+    st[p]=slotsFor(d,p).some(s=>!s.taken);
+  });
+  return st;
+}
+function fmtTime(h,m){
+  const ap=h<12?'AM':'PM'; let hh=h%12; if(hh===0)hh=12;
+  return `${hh}:${m===0?'00':m} ${ap}`;
+}
+function fmtDay(d){
+  return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+
+function renderCal(){
+  document.getElementById('moLabel').textContent=view.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const first=new Date(view.getFullYear(),view.getMonth(),1);
+  const start=first.getDay();
+  const dim=new Date(view.getFullYear(),view.getMonth()+1,0).getDate();
+  const days=document.getElementById('days'); days.innerHTML='';
+  for(let i=0;i<start;i++){const b=document.createElement('div');b.className='day blank';days.appendChild(b);}
+  for(let dd=1;dd<=dim;dd++){
+    const d=new Date(view.getFullYear(),view.getMonth(),dd);
+    const st=dayState(d);
+    const el=document.createElement('div');
+    el.className='day '+st;
+    el.textContent=dd;
+    if(d.getTime()===today.getTime()) el.classList.add('today');
+    if(selDay&&d.getTime()===selDay.getTime()) el.classList.add('sel');
+    if(st==='avail'||st==='soon'){
+      el.onclick=()=>{selDay=new Date(d);selSlot=null;pickFirstPeriod();renderCal();renderSlots();updateFoot();};
+    }else if(st==='full'){
+      el.onclick=()=>nudgeNextOpen(d);
+      el.title='Fully booked — tap for the next open day';
+    }
+    days.appendChild(el);
+  }
+  // disable prev in the past
+  document.getElementById('prev').disabled = (view.getFullYear()===today.getFullYear()&&view.getMonth()===today.getMonth());
+}
+
+function pickFirstPeriod(){
+  const av=periodAvail(selDay);
+  curPeriod = av.morning?'morning':av.afternoon?'afternoon':'evening';
+}
+
+function renderSlots(){
+  const pane=document.getElementById('slotsPane');
+  if(!selDay){pane.innerHTML='<div class="empty"><div class="big">🗓️</div><div>Pick a day with availability to see open times.</div></div>';return;}
+  const av=periodAvail(selDay);
+  const list=slotsFor(selDay,curPeriod);
+  const openCount=list.filter(s=>!s.taken).length;
+  const scarce=openCount<=2;
+  pane.innerHTML=`
+    <div class="slots-head">
+      <div class="d">${fmtDay(selDay)}</div>
+      <div class="c">${openCount} open</div>
+    </div>
+    <div class="period-tabs" id="ptabs">
+      <button data-p="morning" ${av.morning?'':'disabled'}>Morning</button>
+      <button data-p="afternoon" ${av.afternoon?'':'disabled'}>Afternoon</button>
+      <button data-p="evening" ${av.evening?'':'disabled'}>Evening</button>
+    </div>
+    <div class="slot-grid" id="sgrid"></div>
+  `;
+  document.querySelectorAll('#ptabs button').forEach(b=>{
+    if(b.dataset.p===curPeriod)b.classList.add('on');
+    b.onclick=()=>{if(b.disabled)return;curPeriod=b.dataset.p;selSlot=null;renderSlots();updateFoot();};
+  });
+  const grid=document.getElementById('sgrid');
+  list.forEach((s,i)=>{
+    const b=document.createElement('button');
+    const label=fmtTime(s.h,s.m);
+    if(s.taken){
+      b.className='slot taken'; b.textContent=label;
+      b.onclick=()=>offerNextSlot(list,i,label);
+    }else{
+      b.className='slot open'; b.textContent=label;
+      if(scarce) b.classList.add('scarce');
+      if(selSlot&&selSlot.h===s.h&&selSlot.m===s.m) b.classList.add('sel');
+      b.onclick=()=>{selSlot={h:s.h,m:s.m};renderSlots();updateFoot();};
+    }
+    grid.appendChild(b);
+  });
+}
+
+function offerNextSlot(list,idx,label){
+  // find next open slot after idx (across periods if needed)
+  let next=null;
+  for(let j=idx+1;j<list.length;j++){if(!list[j].taken){next=list[j];break;}}
+  const msg=document.getElementById('toastMsg');
+  const act=document.getElementById('toastAction');
+  if(next){
+    msg.innerHTML=`<b>${label}</b> is already booked. Next open: <b>${fmtTime(next.h,next.m)}</b>.`;
+    act.textContent='Grab it';
+    act.onclick=()=>{selSlot={h:next.h,m:next.m};hideToast();renderSlots();updateFoot();};
+  }else{
+    msg.innerHTML=`<b>${label}</b> is booked, and it's the last one this period.`;
+    act.textContent='Next period';
+    act.onclick=()=>{const order=['morning','afternoon','evening'];const av=periodAvail(selDay);const nx=order.slice(order.indexOf(curPeriod)+1).find(p=>av[p]);if(nx){curPeriod=nx;renderSlots();updateFoot();}hideToast();};
+  }
+  showToast();
+}
+
+function nudgeNextOpen(fromDay){
+  let d=new Date(fromDay);
+  for(let i=0;i<45;i++){
+    d=new Date(d.getTime()+DAYMS);
+    const st=dayState(d);
+    if(st==='avail'||st==='soon'){
+      const msg=document.getElementById('toastMsg');
+      msg.innerHTML=`That day's fully booked. Next opening: <b>${d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</b>.`;
+      const act=document.getElementById('toastAction');
+      act.textContent='Jump to it';
+      act.onclick=()=>{
+        view=new Date(d.getFullYear(),d.getMonth(),1);
+        selDay=new Date(d);selSlot=null;pickFirstPeriod();
+        hideToast();renderCal();renderSlots();updateFoot();
+      };
+      showToast();return;
+    }
+  }
+}
+
+let toastTimer;
+function showToast(){const t=document.getElementById('toast');t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(hideToast,6000);}
+function hideToast(){document.getElementById('toast').classList.remove('show');}
+
+function updateFoot(){
+  const pick=document.getElementById('pickText');
+  const btn=document.getElementById('confirmBtn');
+  const buf=document.getElementById('bufferNote');
+  if(selDay&&selSlot){
+    pick.innerHTML=`<b>${fmtDay(selDay)}</b> at <b>${fmtTime(selSlot.h,selSlot.m)}</b> · shown in your timezone`;
+    btn.disabled=false; buf.classList.add('on');
+  }else if(selDay){
+    pick.textContent='Now pick a time.';
+    btn.disabled=true; buf.classList.remove('on');
+  }else{
+    pick.textContent='No time selected yet.';
+    btn.disabled=true; buf.classList.remove('on');
+  }
+}
+
+// timezone label
+try{
+  const tz=Intl.DateTimeFormat().resolvedOptions().timeZone||'your timezone';
+  document.getElementById('tzName').textContent=tz.split('/').pop().replace(/_/g,' ');
+}catch(e){}
+
+document.getElementById('prev').onclick=()=>{view=new Date(view.getFullYear(),view.getMonth()-1,1);renderCal();};
+document.getElementById('next').onclick=()=>{view=new Date(view.getFullYear(),view.getMonth()+1,1);renderCal();};
+document.getElementById('confirmBtn').onclick=()=>{
+  const msg=document.getElementById('toastMsg');
+  msg.innerHTML=`✓ Booked <b>${fmtDay(selDay)}</b> at <b>${fmtTime(selSlot.h,selSlot.m)}</b>. Confirmation + reminder on the way.`;
+  const act=document.getElementById('toastAction');act.textContent='Done';act.onclick=hideToast;
+  showToast();
+};
+document.getElementById('tzBtn').onclick=()=>{
+  const msg=document.getElementById('toastMsg');
+  msg.innerHTML=`Times are auto-detected. In a real booking you'd pick from a full timezone list here.`;
+  const act=document.getElementById('toastAction');act.textContent='OK';act.onclick=hideToast;
+  showToast();
+};
+
+renderCal();
+</script>
+</body>
+</html>

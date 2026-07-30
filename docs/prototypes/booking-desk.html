@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookKit — Booking Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plum:#2c2130; --plum2:#3a2c40; --mauve:#6f5872; --mauve2:#5a4560;
+    --clay:#c69b78; --clay2:#b78a63; --clay-deep:#a97f58;
+    --cream:#f4efe9; --ink:#231a27; --muted:#b9a9bd; --muted2:#8d7d91;
+    --line:rgba(255,255,255,.09); --line-solid:#4a3a50;
+    --good:#7fc9a2; --star:#e3b84e; --pop:#e08a6a;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:#1c141f;color:var(--cream);-webkit-font-smoothing:antialiased;line-height:1.45;padding:20px}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+  .app{max-width:1080px;margin:0 auto;background:linear-gradient(180deg,#332638,#2a1f2f);border:1px solid var(--line-solid);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+
+  .tabs{display:flex;align-items:center;gap:2px;background:#241a29;padding:8px 12px 0;border-bottom:1px solid var(--line-solid)}
+  .tab{padding:8px 16px;font-size:12.5px;color:var(--muted);border-radius:9px 9px 0 0;display:flex;align-items:center;gap:8px}
+  .tab.on{background:linear-gradient(180deg,#3d2e44,#332639);color:var(--cream);font-weight:600}
+  .tab .x{opacity:.4;font-size:11px}
+  .tab.soon{opacity:.5}
+  .tab.soon::after{content:"soon";font-size:9px;background:var(--line-solid);padding:1px 6px;border-radius:100px;margin-left:2px}
+
+  .cmd{display:flex;align-items:center;gap:14px;padding:12px 18px;background:#1f1622;border-bottom:1px solid var(--line-solid)}
+  .wordmark{font-family:'Space Grotesk';font-weight:700;font-size:20px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px}
+  .wordmark .m{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--clay),var(--mauve));display:grid;place-items:center;color:#fff;font-size:14px}
+  .ask{flex:1;background:#2c2130;border:1px solid var(--line-solid);border-radius:100px;padding:10px 18px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .ask input{flex:1;background:none;border:none;outline:none;color:var(--cream);font-family:inherit;font-size:14px}
+  .ask input::placeholder{color:var(--muted2)}
+  .biz-pill{font-size:12.5px;color:var(--cream);background:#2c2130;border:1px solid var(--line-solid);padding:7px 12px;border-radius:100px;display:flex;align-items:center;gap:8px}
+  .biz-pill .av{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#3b2fd6,#7c6cf5);display:grid;place-items:center;font-size:10px;font-weight:700}
+
+  .fd-head{display:flex;align-items:center;gap:12px;padding:20px 22px 4px}
+  .fd-head h1{font-family:'Space Grotesk';font-size:22px;font-weight:600;letter-spacing:-.01em}
+  .fd-head .sync{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--muted2);display:grid;place-items:center;font-size:11px;color:var(--muted);cursor:pointer;transition:.3s}
+  .fd-head .sync:hover{transform:rotate(180deg);color:var(--clay)}
+  .fd-head .date{font-size:12.5px;color:var(--muted);margin-left:2px}
+  .fd-head .prof{margin-left:auto;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .fd-head .prof select{background:#2c2130;border:1px solid var(--line-solid);color:var(--cream);border-radius:9px;padding:6px 10px;font-family:inherit;font-size:12.5px}
+
+  /* booking-focused layout: big schedule + a slim booking-stats rail */
+  .layout{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;padding:16px 22px 8px}
+  @media(max-width:860px){.layout{grid-template-columns:1fr}}
+
+  /* today's schedule panel (the heart of a booking desk) */
+  .sched{background:radial-gradient(120% 120% at 92% 0%, rgba(198,155,120,.16), transparent 55%),linear-gradient(160deg,#3c2c44,#2b2032);border:1px solid var(--line);border-radius:var(--radius);padding:16px 16px 8px;display:flex;flex-direction:column}
+  .sched-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .sched-top .t{font-family:'Space Grotesk';font-size:14px;font-weight:600}
+  .sched-top .live{font-size:10.5px;color:var(--good);display:flex;align-items:center;gap:5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .sched-top .live i{width:7px;height:7px;border-radius:50%;background:var(--good);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(127,201,162,.5)}70%{box-shadow:0 0 0 7px rgba(127,201,162,0)}100%{box-shadow:0 0 0 0 rgba(127,201,162,0)}}
+
+  .nowline{display:flex;align-items:center;gap:8px;margin:8px 0 6px;font-size:10.5px;color:var(--pop);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+  .nowline::before,.nowline::after{content:"";height:1px;background:linear-gradient(90deg,var(--pop),transparent);flex:1;opacity:.5}
+  .nowline::before{background:linear-gradient(90deg,transparent,var(--pop))}
+
+  .timeline{display:flex;flex-direction:column;gap:6px;overflow-y:auto;max-height:340px;padding-right:2px}
+  .apt{display:flex;align-items:center;gap:11px;font-size:12.5px;padding:9px 11px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid transparent;transition:.12s;cursor:pointer}
+  .apt:hover{border-color:var(--line);background:rgba(255,255,255,.07);transform:translateX(2px)}
+  .apt.done{opacity:.5}
+  .apt.now{border-color:var(--pop);background:rgba(224,138,106,.1)}
+  .apt .tm{font-family:'Space Grotesk';font-weight:600;color:var(--clay);width:52px;flex-shrink:0}
+  .apt.now .tm{color:var(--pop)}
+  .apt .who{min-width:0}
+  .apt .nm{font-weight:600}
+  .apt .sv{color:var(--muted);font-size:11.5px}
+  .apt .staff{margin-left:auto;font-size:11px;color:var(--muted2);flex-shrink:0}
+  .apt .tag{font-size:10px;padding:2px 8px;border-radius:100px;font-weight:600;flex-shrink:0}
+  .tag.conf{background:rgba(127,201,162,.15);color:var(--good)}
+  .tag.new{background:rgba(227,184,78,.15);color:var(--star)}
+  .tag.walk{background:rgba(198,155,120,.18);color:var(--clay)}
+  .sched-foot{display:flex;gap:8px;padding:12px 2px 8px;border-top:1px solid var(--line);margin-top:10px}
+  .mini-btn{flex:1;padding:10px;border-radius:10px;font-size:12.5px;font-weight:600;border:1px solid var(--line-solid);background:rgba(255,255,255,.03);transition:.12s;display:flex;align-items:center;justify-content:center;gap:7px}
+  .mini-btn:hover{border-color:var(--clay);color:var(--clay)}
+  .mini-btn.primary{background:linear-gradient(160deg,var(--clay),var(--clay-deep));color:#2c1a10;border-color:transparent}
+  .mini-btn.primary:hover{color:#2c1a10;filter:brightness(1.05)}
+
+  /* right rail: booking stats only */
+  .rail{display:flex;flex-direction:column;gap:12px}
+  .stat{border-radius:var(--radius);padding:15px 16px;border:1px solid var(--line);position:relative;overflow:hidden;transition:transform .14s,box-shadow .14s;cursor:pointer}
+  .stat:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(0,0,0,.3)}
+  .stat .k{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .stat .v{font-family:'Space Grotesk';font-size:30px;font-weight:700;letter-spacing:-.02em;margin-top:8px}
+  .stat .v small{font-size:14px;color:var(--muted);font-weight:600}
+  .stat .trend{font-size:11px;font-weight:600;margin-top:3px}
+  .trend.up{color:var(--good)} .trend.down{color:#e08a8a}
+  .s-mauve{background:linear-gradient(160deg,var(--mauve),var(--mauve2))}
+  .s-mauve .k{color:rgba(255,255,255,.75)}
+  .s-plum{background:linear-gradient(160deg,#3f2f46,#342640)}
+  .s-clay{background:linear-gradient(160deg,var(--clay),var(--clay-deep))}
+  .s-clay .k{color:#3a2418;opacity:.8} .s-clay .v{color:#2c1a10}
+  .s-clay .trend{color:#3a2418;opacity:.8}
+  .ring{display:flex;align-items:center;gap:14px}
+  .ring .dial{width:58px;height:58px;border-radius:50%;flex-shrink:0;background:conic-gradient(var(--clay) 0 71%, rgba(255,255,255,.12) 71% 100%);display:grid;place-items:center;position:relative}
+  .ring .dial::after{content:"";position:absolute;inset:7px;border-radius:50%;background:#342640}
+  .ring .dial b{position:relative;font-family:'Space Grotesk';font-size:14px}
+  .stars{color:var(--star);font-size:15px;letter-spacing:2px}
+
+  /* booking action tiles row */
+  .actions{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:6px 22px 22px}
+  @media(max-width:860px){.actions{grid-template-columns:repeat(2,1fr)}}
+  .atile{border-radius:var(--radius);padding:15px;min-height:96px;display:flex;flex-direction:column;border:1px solid var(--line);cursor:pointer;transition:transform .14s,box-shadow .14s}
+  .atile:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.35)}
+  .atile .ic{font-size:20px;margin-bottom:auto}
+  .atile .lbl{font-size:13px;font-weight:600}
+  .atile .sub{font-size:11px;color:var(--muted);margin-top:2px}
+  .a-mauve{background:linear-gradient(160deg,var(--mauve),var(--mauve2))}
+  .a-mauve .sub{color:rgba(255,255,255,.7)}
+  .a-plum{background:linear-gradient(160deg,#3d2d45,#2f2238)}
+
+  .scale-note{margin:0 22px 22px;padding:13px 16px;border:1px dashed var(--line-solid);border-radius:12px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:10px}
+  .scale-note b{color:var(--clay);font-weight:600}
+  .scale-note .chips{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+  .scale-note .chip{font-size:10.5px;background:rgba(255,255,255,.04);border:1px solid var(--line-solid);padding:3px 9px;border-radius:100px;color:var(--muted2)}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);background:#1a1220;border:1px solid var(--line-solid);color:var(--cream);padding:12px 18px;border-radius:12px;font-size:13px;box-shadow:0 16px 40px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:.24s;z-index:20}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast b{color:var(--clay)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tabs">
+    <div class="tab on">Booking Desk <span class="x">●</span></div>
+    <div class="tab">Calendar <span class="x">✕</span></div>
+    <div class="tab">Clients <span class="x">✕</span></div>
+    <div class="tab soon">Payments</div>
+    <div class="tab soon">Reports</div>
+  </div>
+
+  <div class="cmd">
+    <div class="wordmark"><span class="m">✦</span>BookKit</div>
+    <div class="ask"><span>⌘</span><input id="ask" placeholder="Book a client, block time, find an opening…"></div>
+    <div class="biz-pill"><span class="av">M</span> Marcus · Owner</div>
+  </div>
+
+  <div class="fd-head">
+    <h1>Booking Desk</h1>
+    <button class="sync" id="sync" title="Refresh">⟳</button>
+    <span class="date" id="dateLabel"></span>
+    <div class="prof">
+      Viewing as
+      <select id="prof">
+        <option value="barber">Barber shop</option>
+        <option value="salon">Hair salon</option>
+        <option value="nail">Nail studio</option>
+        <option value="tattoo">Tattoo studio</option>
+        <option value="spa">Spa</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sched">
+      <div class="sched-top">
+        <span class="t">Today's schedule</span>
+        <span class="live"><i></i>Live</span>
+      </div>
+      <div class="timeline" id="timeline"></div>
+      <div class="sched-foot">
+        <button class="mini-btn primary" id="addApt">＋ New appointment</button>
+        <button class="mini-btn" id="blockTime">Block time</button>
+        <button class="mini-btn" id="findOpen">Find opening</button>
+      </div>
+    </div>
+
+    <div class="rail" id="rail"></div>
+  </div>
+
+  <div class="actions" id="actions"></div>
+
+  <div class="scale-note">
+    <span>Booking is the whole product right now. <b>As you scale,</b> the greyed tabs light up.</span>
+    <span class="chips"><span class="chip">Payments</span><span class="chip">Inventory</span><span class="chip">Marketing</span><span class="chip">POS</span><span class="chip">Payroll</span></span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PROFILES={
+  barber:{book:71,rev:"$3,240",chair:"chairs",apts:[
+    ["8:30","Ray J.","Line-up","Dre","done"],["9:00","Jordan P.","Skin fade","Marcus","now"],
+    ["9:45","Andre M.","Beard + hot towel","Marcus","conf"],["10:30","Walk-in","Line-up","Tay","walk"],
+    ["11:15","Kevin R.","Kids cut","Marcus","new"],["12:00","Sam T.","Skin fade","Dre","conf"],
+    ["1:00","Marcus B.","Full cut + beard","Marcus","conf"],["2:15","Open","—","—","open"]]},
+  salon:{book:66,rev:"$5,180",chair:"stations",apts:[
+    ["9:00","Aisha B.","Balayage (2.5h)","Nia","now"],["11:30","Tara L.","Highlights","Rae","conf"],
+    ["12:45","Walk-in","Blowout","Mel","walk"],["1:30","Gina F.","Gloss + trim","Nia","new"],
+    ["2:45","Priya S.","Full color","Rae","conf"],["4:00","Open","—","—","open"]]},
+  nail:{book:78,rev:"$2,090",chair:"tables",apts:[
+    ["9:00","Ivy R.","Fill-in","Lu","done"],["9:15","Bri K.","Gel set + art","Kim","now"],
+    ["10:00","Dana W.","Acrylic full","Vee","conf"],["11:00","Walk-in","Fill-in","Lu","walk"],
+    ["12:30","Sofia R.","Pedicure","Lu","new"],["1:45","Mia T.","Chrome set","Kim","conf"]]},
+  tattoo:{book:58,rev:"$4,650",chair:"rooms",apts:[
+    ["11:00","Chris D.","Consultation","Ink B","now"],["12:00","Lena M.","Fine line (2h)","Ink B","conf"],
+    ["2:30","Ray V.","Custom sleeve (3h)","Ink A","conf"],["5:00","Omar H.","Cover-up","Ink A","conf"],
+    ["6:30","Walk-in","Flash","Ink B","walk"]]},
+  spa:{book:69,rev:"$3,870",chair:"suites",apts:[
+    ["9:00","Grace L.","Signature facial","Ivy","now"],["10:30","Uma P.","Chemical peel","Sol","conf"],
+    ["12:00","Nora K.","Dermaplaning","Ivy","new"],["1:30","Ella R.","Waxing","Ivy","conf"],
+    ["3:00","Hana Y.","Massage 60","Rob","conf"]]},
+};
+
+function toast(msg){const t=document.getElementById('toast');t.innerHTML=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+
+function tagLabel(t){return t==='conf'?'Confirmed':t==='new'?'New':t==='walk'?'Walk-in':t==='done'?'Done':'Open';}
+
+function render(){
+  const key=document.getElementById('prof').value;
+  const p=PROFILES[key];
+
+  // schedule
+  const tl=document.getElementById('timeline'); tl.innerHTML='';
+  let placedNow=false;
+  p.apts.forEach(a=>{
+    const [tm,nm,sv,staff,st]=a;
+    if(st==='now'&&!placedNow){const nl=document.createElement('div');nl.className='nowline';nl.textContent='now';tl.appendChild(nl);placedNow=true;}
+    const d=document.createElement('div');
+    d.className='apt '+(st==='done'?'done':st==='now'?'now':'');
+    if(st==='open'){
+      d.innerHTML=`<span class="tm">${tm}</span><span class="who"><span class="nm" style="color:var(--muted)">Open slot</span><span class="sv"> · tap to fill</span></span>`;
+      d.onclick=()=>toast('Opening <b>new appointment</b> at '+tm);
+    }else{
+      d.innerHTML=`<span class="tm">${tm}</span><span class="who"><span class="nm">${nm}</span> <span class="sv">${sv}</span></span><span class="staff">${staff}</span><span class="tag ${st}">${tagLabel(st)}</span>`;
+      d.onclick=()=>toast('<b>'+nm+'</b> · '+sv+' with '+staff);
+    }
+    tl.appendChild(d);
+  });
+
+  // right rail — booking metrics only
+  const rail=document.getElementById('rail'); rail.innerHTML='';
+  rail.innerHTML=`
+    <div class="stat s-plum" data-t="Chair utilization">
+      <div class="k">Booked today</div>
+      <div class="ring"><div class="dial" style="background:conic-gradient(var(--clay) 0 ${p.book}%, rgba(255,255,255,.12) ${p.book}% 100%)"><b>${p.book}%</b></div>
+        <div><div class="v" style="font-size:22px;margin-top:0">${Math.round(p.book/12)} of 12</div><div class="trend up">▲ 6% vs last week</div></div></div>
+    </div>
+    <div class="stat s-mauve" data-t="Upcoming bookings">
+      <div class="k">Upcoming this week</div>
+      <div class="v">${34+ (key.length)}<small> booked</small></div>
+      <div class="trend up">15 rebooked today</div>
+    </div>
+    <div class="stat s-plum" data-t="No-show risk">
+      <div class="k">No-show risk</div>
+      <div class="v">2<small> flagged</small></div>
+      <div class="trend down">reminders auto-sent</div>
+    </div>
+    <div class="stat s-clay" data-t="Reviews">
+      <div class="k">Ratings this week</div>
+      <div class="stars">★★★★★</div>
+      <div class="v" style="font-size:22px">4.9 <small style="color:#3a2418;opacity:.7">· 33 reviews</small></div>
+    </div>`;
+  rail.querySelectorAll('.stat').forEach(s=>s.onclick=()=>toast('Opening <b>'+s.dataset.t+'</b>'));
+
+  // booking action tiles
+  const ac=document.getElementById('actions'); ac.innerHTML='';
+  const tiles=[
+    ['a-mauve','📅','Calendar','Full month & slots'],
+    ['a-mauve','👥','Clients','History & rebooking'],
+    ['a-plum','🔁','Recurring','Standing appointments'],
+    ['a-plum','⏸','Availability','Hours, staff, '+p.chair],
+  ];
+  tiles.forEach(t=>{
+    const d=document.createElement('div');
+    d.className='atile '+t[0];
+    d.innerHTML=`<div class="ic">${t[1]}</div><div class="lbl">${t[2]}</div><div class="sub">${t[3]}</div>`;
+    d.onclick=()=>toast('Opening <b>'+t[2]+'</b>');
+    ac.appendChild(d);
+  });
+}
+
+document.getElementById('dateLabel').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+document.getElementById('prof').onchange=render;
+document.getElementById('sync').onclick=()=>{render();toast('Schedule refreshed');};
+document.getElementById('addApt').onclick=()=>toast('Opening <b>new appointment</b>');
+document.getElementById('blockTime').onclick=()=>toast('<b>Block time</b> — lunch, cleanup, personal');
+document.getElementById('findOpen').onclick=()=>toast('<b>Find opening</b> — next free slot across staff');
+document.getElementById('ask').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.value.trim()){toast('Got it: <b>'+e.target.value.trim()+'</b>');e.target.value='';}});
+render();
+</script>
+</body>
+</html>

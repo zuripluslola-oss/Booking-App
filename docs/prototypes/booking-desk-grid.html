@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookKit — Booking Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --plum:#2c2130; --mauve:#6f5872; --mauve2:#5a4560;
+    --clay:#c69b78; --clay-deep:#a97f58;
+    --cream:#f4efe9; --muted:#b9a9bd; --muted2:#8d7d91;
+    --line:rgba(255,255,255,.09); --line-solid:#4a3a50;
+    --good:#7fc9a2; --star:#e3b84e; --pop:#e08a6a; --danger:#e08a8a;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:#1c141f;color:var(--cream);-webkit-font-smoothing:antialiased;line-height:1.45;padding:20px}
+  @media(max-width:640px){body{padding:8px}}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+
+  .app{max-width:1120px;margin:0 auto;background:linear-gradient(180deg,#332638,#2a1f2f);border:1px solid var(--line-solid);border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+
+  .tabs{display:flex;align-items:center;gap:2px;background:#241a29;padding:8px 12px 0;border-bottom:1px solid var(--line-solid);overflow-x:auto}
+  .tab{padding:8px 16px;font-size:12.5px;color:var(--muted);border-radius:9px 9px 0 0;display:flex;align-items:center;gap:8px;white-space:nowrap}
+  .tab.on{background:linear-gradient(180deg,#3d2e44,#332639);color:var(--cream);font-weight:600}
+  .tab .x{opacity:.4;font-size:11px}
+  .tab.soon{opacity:.5}
+  .tab.soon::after{content:"soon";font-size:9px;background:var(--line-solid);padding:1px 6px;border-radius:100px;margin-left:2px}
+
+  .cmd{display:flex;align-items:center;gap:12px;padding:12px 18px;background:#1f1622;border-bottom:1px solid var(--line-solid)}
+  .wordmark{font-family:'Space Grotesk';font-weight:700;font-size:19px;letter-spacing:-.02em;display:flex;align-items:center;gap:9px;flex-shrink:0}
+  .wordmark .m{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--clay),var(--mauve));display:grid;place-items:center;color:#fff;font-size:14px}
+  .ask{flex:1;background:#2c2130;border:1px solid var(--line-solid);border-radius:100px;padding:9px 16px;font-size:14px;color:var(--muted);display:flex;align-items:center;gap:10px;min-width:0}
+  .ask input{flex:1;background:none;border:none;outline:none;color:var(--cream);font-family:inherit;font-size:14px;min-width:0}
+  .ask input::placeholder{color:var(--muted2)}
+  .biz-pill{font-size:12.5px;color:var(--cream);background:#2c2130;border:1px solid var(--line-solid);padding:7px 12px;border-radius:100px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .biz-pill .av{width:20px;height:20px;border-radius:6px;background:linear-gradient(135deg,#3b2fd6,#7c6cf5);display:grid;place-items:center;font-size:10px;font-weight:700}
+  @media(max-width:640px){.ask{display:none}.biz-pill span:last-child{display:none}}
+
+  .fd-head{display:flex;align-items:center;gap:12px;padding:18px 22px 4px;flex-wrap:wrap}
+  .fd-head h1{font-family:'Space Grotesk';font-size:22px;font-weight:600;letter-spacing:-.01em}
+  .fd-head .daynav{display:flex;align-items:center;gap:4px;margin-left:4px}
+  .fd-head .daynav button{width:26px;height:26px;border-radius:8px;border:1px solid var(--line-solid);background:#2c2130;color:var(--muted);display:grid;place-items:center;font-size:13px;transition:.12s}
+  .fd-head .daynav button:hover{border-color:var(--clay);color:var(--clay)}
+  .fd-head .date{font-size:12.5px;color:var(--muted);min-width:150px}
+  .fd-head .prof{margin-left:auto;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .fd-head .prof select{background:#2c2130;border:1px solid var(--line-solid);color:var(--cream);border-radius:9px;padding:6px 10px;font-family:inherit;font-size:12.5px}
+
+  .glance{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 22px 4px}
+  @media(max-width:760px){.glance{grid-template-columns:repeat(2,1fr)}}
+  .gcard{background:linear-gradient(160deg,#3a2b42,#2e2238);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;transition:transform .12s,box-shadow .12s}
+  .gcard:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(0,0,0,.3)}
+  .gcard.accent{background:linear-gradient(160deg,var(--clay),var(--clay-deep))}
+  .gcard.accent .gk,.gcard.accent .gsub{color:#3a2418}
+  .gcard.accent .gv{color:#2c1a10}
+  .gk{font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .gv{font-family:'Space Grotesk';font-size:24px;font-weight:700;letter-spacing:-.02em;margin-top:3px;line-height:1}
+  .gv small{font-size:13px;color:var(--muted);font-weight:600}
+  .gsub{font-size:11px;color:var(--muted2);margin-top:3px}
+
+  .layout{display:grid;grid-template-columns:1fr 300px;gap:14px;padding:14px 22px 8px}
+  @media(max-width:960px){.layout{grid-template-columns:1fr}}
+
+  .sched{background:linear-gradient(160deg,#3c2c44,#2b2032);border:1px solid var(--line);border-radius:var(--radius);padding:14px 8px 10px 14px;display:flex;flex-direction:column}
+  .sched-top{display:flex;align-items:center;justify-content:space-between;margin:0 6px 10px}
+  .sched-top .t{font-family:'Space Grotesk';font-size:14px;font-weight:600}
+  .sched-top .live{font-size:10.5px;color:var(--good);display:flex;align-items:center;gap:5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+  .sched-top .live i{width:7px;height:7px;border-radius:50%;background:var(--good);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(127,201,162,.5)}70%{box-shadow:0 0 0 7px rgba(127,201,162,0)}100%{box-shadow:0 0 0 0 rgba(127,201,162,0)}}
+
+  .lanes-head{display:grid;position:sticky;top:0;z-index:4;background:#332639;padding-bottom:6px}
+  .lanes-head .lane-name{font-size:11px;font-weight:600;color:var(--muted);text-align:center;padding:4px 2px;border-radius:7px;background:rgba(255,255,255,.04);margin:0 2px}
+  .lanes-head .lane-name b{display:block;color:var(--cream);font-size:12px}
+  .lanes-head .lane-name .free{color:var(--good)} .lanes-head .lane-name .busy{color:var(--pop)}
+
+  .grid-scroll{overflow:auto;max-height:520px;position:relative}
+  .tgrid{display:grid;position:relative}
+  .hourcol{position:relative}
+  .hourlabel{height:60px;font-size:10.5px;color:var(--muted2);font-weight:600;padding-right:8px;text-align:right;transform:translateY(-6px)}
+  .lane{position:relative;border-left:1px solid var(--line);margin:0 2px}
+  .hourline{position:absolute;left:0;right:0;height:1px;background:var(--line)}
+  .nowbar{position:absolute;left:0;right:0;height:2px;background:var(--pop);z-index:5;box-shadow:0 0 8px rgba(224,138,106,.6)}
+  .nowbar::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--pop)}
+
+  .appt{position:absolute;left:3px;right:3px;border-radius:9px;padding:6px 8px;font-size:11.5px;overflow:hidden;cursor:pointer;border:1px solid rgba(0,0,0,.2);transition:transform .1s,box-shadow .1s;z-index:2}
+  .appt:hover{transform:scale(1.015);box-shadow:0 8px 20px rgba(0,0,0,.4);z-index:6}
+  .appt .a-nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .appt .a-sv{opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10.5px}
+  .appt .a-tm{font-size:9.5px;opacity:.7;margin-top:1px;font-family:'Space Grotesk';font-weight:600}
+  .appt.conf{background:linear-gradient(160deg,#7a6a86,#5f5070);color:#fff}
+  .appt.new{background:linear-gradient(160deg,#c9a94e,#a8862f);color:#2c1a10}
+  .appt.walk{background:linear-gradient(160deg,var(--clay),var(--clay-deep));color:#2c1a10}
+  .appt.done{background:rgba(255,255,255,.06);color:var(--muted);border-style:dashed}
+  .appt.now{outline:2px solid var(--pop);outline-offset:1px}
+  .appt.checked::after{content:"✓ in";position:absolute;top:4px;right:6px;font-size:9px;font-weight:700;background:rgba(127,201,162,.9);color:#12251a;padding:1px 5px;border-radius:100px}
+  .appt.noshow{opacity:.45;text-decoration:line-through}
+  .appt.dragging{opacity:.4}
+  .gap{position:absolute;left:3px;right:3px;border-radius:8px;border:1px dashed var(--line-solid);display:flex;align-items:center;justify-content:center;font-size:10.5px;color:var(--muted2);cursor:pointer;transition:.12s;z-index:1}
+  .gap:hover{border-color:var(--clay);color:var(--clay);background:rgba(198,155,120,.06)}
+  .gap.drop{border-color:var(--good);background:rgba(127,201,162,.12);color:var(--good)}
+
+  .sched-foot{display:flex;gap:8px;padding:12px 6px 4px;border-top:1px solid var(--line);margin-top:10px}
+  .mini-btn{flex:1;padding:10px;border-radius:10px;font-size:12.5px;font-weight:600;border:1px solid var(--line-solid);background:rgba(255,255,255,.03);transition:.12s;display:flex;align-items:center;justify-content:center;gap:6px}
+  .mini-btn:hover{border-color:var(--clay);color:var(--clay)}
+  .mini-btn.primary{background:linear-gradient(160deg,var(--clay),var(--clay-deep));color:#2c1a10;border-color:transparent}
+  .mini-btn.primary:hover{color:#2c1a10;filter:brightness(1.05)}
+
+  .rail{display:flex;flex-direction:column;gap:12px}
+  .stat{border-radius:var(--radius);padding:14px 16px;border:1px solid var(--line);position:relative;overflow:hidden}
+  .stat .k{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .s-mauve{background:linear-gradient(160deg,var(--mauve),var(--mauve2))}.s-mauve .k{color:rgba(255,255,255,.75)}
+  .s-plum{background:linear-gradient(160deg,#3f2f46,#342640)}
+  .ring{display:flex;align-items:center;gap:14px;margin-top:6px}
+  .dial{width:56px;height:56px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;position:relative}
+  .dial::after{content:"";position:absolute;inset:7px;border-radius:50%;background:#342640}
+  .dial b{position:relative;font-family:'Space Grotesk';font-size:14px}
+  .ring .v{font-family:'Space Grotesk';font-size:20px;font-weight:700}
+  .trend{font-size:11px;font-weight:600;margin-top:2px}.trend.up{color:var(--good)}.trend.down{color:var(--danger)}
+  .stars{color:var(--star);font-size:15px;letter-spacing:2px}
+  .risk-list{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+  .risk-item{display:flex;align-items:center;gap:8px;font-size:12px;background:rgba(0,0,0,.15);border-radius:8px;padding:7px 9px}
+  .risk-item .dot{width:7px;height:7px;border-radius:50%;background:var(--danger);flex-shrink:0}
+  .risk-item .rt{color:var(--muted);margin-left:auto;font-size:10.5px}
+
+  .scale-note{margin:0 22px 20px;padding:12px 16px;border:1px dashed var(--line-solid);border-radius:12px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .scale-note b{color:var(--clay);font-weight:600}
+  .scale-note .chips{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+  .scale-note .chip{font-size:10.5px;background:rgba(255,255,255,.04);border:1px solid var(--line-solid);padding:3px 9px;border-radius:100px;color:var(--muted2)}
+
+  .sheet-bg{position:fixed;inset:0;background:rgba(10,6,12,.55);opacity:0;pointer-events:none;transition:.2s;z-index:30;backdrop-filter:blur(2px)}
+  .sheet-bg.show{opacity:1;pointer-events:auto}
+  .sheet{position:fixed;left:50%;bottom:0;transform:translate(-50%,100%);width:min(420px,94vw);background:linear-gradient(180deg,#3a2b42,#2b2032);border:1px solid var(--line-solid);border-bottom:none;border-radius:18px 18px 0 0;padding:18px;transition:transform .26s cubic-bezier(.2,.8,.2,1);z-index:31}
+  .sheet.show{transform:translate(-50%,0)}
+  @media(min-width:640px){.sheet{bottom:auto;top:50%;transform:translate(-50%,-46%) scale(.96);border-radius:18px;border-bottom:1px solid var(--line-solid);opacity:0;transition:.2s}.sheet.show{transform:translate(-50%,-50%) scale(1);opacity:1}}
+  .sheet h3{font-family:'Space Grotesk';font-size:18px;font-weight:600}
+  .sheet .sh-sv{color:var(--muted);font-size:13px;margin-top:2px}
+  .sheet .sh-meta{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .sheet .sh-meta span{font-size:11.5px;background:rgba(255,255,255,.05);border:1px solid var(--line);padding:5px 10px;border-radius:100px}
+  .sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+  .sa{padding:12px;border-radius:11px;font-size:13px;font-weight:600;border:1px solid var(--line-solid);background:rgba(255,255,255,.04);transition:.12s;display:flex;align-items:center;justify-content:center;gap:7px}
+  .sa:hover{border-color:var(--clay)}
+  .sa.ok{background:rgba(127,201,162,.14);border-color:transparent;color:var(--good)}
+  .sa.bad{background:rgba(224,138,136,.12);border-color:transparent;color:var(--danger)}
+  .sa.full{grid-column:span 2}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,16px);background:#1a1220;border:1px solid var(--line-solid);color:var(--cream);padding:12px 18px;border-radius:12px;font-size:13px;box-shadow:0 16px 40px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:.24s;z-index:40}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast b{color:var(--clay)}
+  .hint{font-size:11px;color:var(--muted2);padding:2px 8px 0}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tabs">
+    <div class="tab on">Booking Desk <span class="x">●</span></div>
+    <div class="tab">Calendar <span class="x">✕</span></div>
+    <div class="tab">Clients <span class="x">✕</span></div>
+    <div class="tab soon">Payments</div>
+    <div class="tab soon">Reports</div>
+  </div>
+
+  <div class="cmd">
+    <div class="wordmark"><span class="m">✦</span>BookKit</div>
+    <div class="ask"><span>⌘</span><input id="ask" placeholder="Book a client, block time, find an opening…"></div>
+    <div class="biz-pill"><span class="av">M</span> <span>Marcus · Owner</span></div>
+  </div>
+
+  <div class="fd-head">
+    <h1>Booking Desk</h1>
+    <div class="daynav"><button id="dprev">‹</button><button id="dnext">›</button></div>
+    <span class="date" id="dateLabel"></span>
+    <div class="prof">
+      Viewing as
+      <select id="prof">
+        <option value="barber">Barber shop</option>
+        <option value="salon">Hair salon</option>
+        <option value="nail">Nail studio</option>
+        <option value="tattoo">Tattoo studio</option>
+        <option value="spa">Spa</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="glance" id="glance"></div>
+
+  <div class="layout">
+    <div class="sched">
+      <div class="sched-top">
+        <span class="t">Today · time grid</span>
+        <span class="live"><i></i>Live</span>
+      </div>
+      <div class="lanes-head" id="lanesHead"></div>
+      <div class="grid-scroll">
+        <div class="tgrid" id="tgrid"></div>
+      </div>
+      <div class="hint">Tap an appointment for actions · drag one onto a dashed gap to reschedule · tap a gap to fill it</div>
+      <div class="sched-foot">
+        <button class="mini-btn primary" id="addApt">＋ New appointment</button>
+        <button class="mini-btn" id="blockTime">Block time</button>
+        <button class="mini-btn" id="findOpen">Find opening</button>
+      </div>
+    </div>
+
+    <div class="rail" id="rail"></div>
+  </div>
+
+  <div class="scale-note">
+    <span>Booking is the whole product right now. <b>As you scale,</b> the greyed tabs light up.</span>
+    <span class="chips"><span class="chip">Payments</span><span class="chip">Inventory</span><span class="chip">Marketing</span><span class="chip">POS</span><span class="chip">Payroll</span></span>
+  </div>
+</div>
+
+<div class="sheet-bg" id="sheetBg"></div>
+<div class="sheet" id="sheet"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DAY_START=8, DAY_END=20, PXH=60;
+const PROFILES={
+  barber:{staff:["Marcus","Dre","Tay"],chairword:"chairs",apts:[
+    {s:8.5,e:8.75,who:"Ray J.",sv:"Line-up",lane:1,st:"done"},
+    {s:9,e:9.75,who:"Jordan P.",sv:"Skin fade",lane:0,st:"now"},
+    {s:9.75,e:10.25,who:"Andre M.",sv:"Beard + towel",lane:0,st:"conf"},
+    {s:10.5,e:10.75,who:"Walk-in",sv:"Line-up",lane:2,st:"walk"},
+    {s:11.25,e:11.75,who:"Kevin R.",sv:"Kids cut",lane:0,st:"new"},
+    {s:12,e:12.75,who:"Sam T.",sv:"Skin fade",lane:1,st:"conf"},
+    {s:13,e:14,who:"Marcus B.",sv:"Cut + beard",lane:0,st:"conf"},
+    {s:14.5,e:15,who:"Deja W.",sv:"Line-up",lane:2,st:"conf"}]},
+  salon:{staff:["Nia","Rae","Mel"],chairword:"stations",apts:[
+    {s:9,e:11.5,who:"Aisha B.",sv:"Balayage",lane:0,st:"now"},
+    {s:11.5,e:13,who:"Tara L.",sv:"Highlights",lane:1,st:"conf"},
+    {s:12.75,e:13.5,who:"Walk-in",sv:"Blowout",lane:2,st:"walk"},
+    {s:13.5,e:14.5,who:"Gina F.",sv:"Gloss + trim",lane:0,st:"new"},
+    {s:14.75,e:16.5,who:"Priya S.",sv:"Full color",lane:1,st:"conf"}]},
+  nail:{staff:["Kim","Vee","Lu"],chairword:"tables",apts:[
+    {s:9,e:9.5,who:"Ivy R.",sv:"Fill-in",lane:2,st:"done"},
+    {s:9.25,e:10.5,who:"Bri K.",sv:"Gel set + art",lane:0,st:"now"},
+    {s:10,e:11.5,who:"Dana W.",sv:"Acrylic full",lane:1,st:"conf"},
+    {s:11,e:11.75,who:"Walk-in",sv:"Fill-in",lane:2,st:"walk"},
+    {s:12.5,e:13.5,who:"Sofia R.",sv:"Pedicure",lane:2,st:"new"},
+    {s:13.75,e:15,who:"Mia T.",sv:"Chrome set",lane:0,st:"conf"}]},
+  tattoo:{staff:["Ink A","Ink B"],chairword:"rooms",apts:[
+    {s:11,e:11.5,who:"Chris D.",sv:"Consultation",lane:1,st:"now"},
+    {s:12,e:14,who:"Lena M.",sv:"Fine line",lane:1,st:"conf"},
+    {s:14.5,e:17.5,who:"Ray V.",sv:"Custom sleeve",lane:0,st:"conf"},
+    {s:17,e:18.5,who:"Omar H.",sv:"Cover-up",lane:0,st:"conf"},
+    {s:18.5,e:19,who:"Walk-in",sv:"Flash",lane:1,st:"walk"}]},
+  spa:{staff:["Ivy","Sol","Rob"],chairword:"suites",apts:[
+    {s:9,e:10.25,who:"Grace L.",sv:"Signature facial",lane:0,st:"now"},
+    {s:10.5,e:11.5,who:"Uma P.",sv:"Chemical peel",lane:1,st:"conf"},
+    {s:12,e:12.75,who:"Nora K.",sv:"Dermaplaning",lane:0,st:"new"},
+    {s:13.5,e:14,who:"Ella R.",sv:"Waxing",lane:0,st:"conf"},
+    {s:15,e:16,who:"Hana Y.",sv:"Massage 60",lane:2,st:"conf"}]},
+};
+
+function nowHours(){const d=new Date();let h=d.getHours()+d.getMinutes()/60;if(h<DAY_START||h>DAY_END)h=10.2;return h;}
+let NOW=nowHours(), curKey='barber', state=null, checked={}, noshow={}, dragId=null;
+
+function clone(key){return PROFILES[key].apts.map((a,i)=>({...a,id:i}));}
+function fmt(h){let hh=Math.floor(h);let m=Math.round((h-hh)*60);const ap=hh<12?'a':'p';let d=hh%12;if(d===0)d=12;return `${d}:${m===0?'00':(m<10?'0'+m:m)}${ap}`;}
+function toast(m){const t=document.getElementById('toast');t.innerHTML=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
+
+function render(){
+  const P=PROFILES[curKey], nLanes=P.staff.length, gridCols=`52px repeat(${nLanes},1fr)`;
+  const lh=document.getElementById('lanesHead');
+  lh.style.display='grid'; lh.style.gridTemplateColumns=gridCols;
+  let lhHtml='<div></div>';
+  P.staff.forEach((name,i)=>{
+    const busy=state.filter(a=>a.lane===i&&!noshow[a.id]).reduce((t,a)=>t+(a.e-a.s),0);
+    const load=Math.round(busy/(DAY_END-DAY_START)*100);
+    lhHtml+=`<div class="lane-name"><b>${name}</b><span class="${load>50?'busy':'free'}">${load}% booked</span></div>`;
+  });
+  lh.innerHTML=lhHtml;
+
+  const g=document.getElementById('tgrid');
+  g.style.gridTemplateColumns=gridCols;
+  const totalH=(DAY_END-DAY_START)*PXH;
+  let html='<div class="hourcol" style="height:'+totalH+'px">';
+  for(let h=DAY_START;h<DAY_END;h++){html+=`<div class="hourlabel">${fmt(h)}</div>`;}
+  html+='</div>';
+  for(let ln=0;ln<nLanes;ln++){
+    html+=`<div class="lane" data-lane="${ln}" style="height:${totalH}px">`;
+    for(let h=DAY_START+1;h<DAY_END;h++){html+=`<div class="hourline" style="top:${(h-DAY_START)*PXH}px"></div>`;}
+    if(NOW>=DAY_START&&NOW<=DAY_END) html+=`<div class="nowbar" style="top:${(NOW-DAY_START)*PXH}px"></div>`;
+    const laneApts=state.filter(a=>a.lane===ln).sort((a,b)=>a.s-b.s);
+    let cursor=DAY_START;
+    laneApts.forEach(a=>{if(a.s-cursor>=0.5)html+=gapHtml(ln,cursor,a.s);cursor=Math.max(cursor,a.e);});
+    if(DAY_END-cursor>=0.5) html+=gapHtml(ln,cursor,DAY_END);
+    laneApts.forEach(a=>{
+      const top=(a.s-DAY_START)*PXH, hgt=(a.e-a.s)*PXH-3;
+      const cls=[a.st,checked[a.id]?'checked':'',noshow[a.id]?'noshow':''].join(' ');
+      html+=`<div class="appt ${cls}" draggable="true" data-id="${a.id}" style="top:${top}px;height:${hgt}px">
+        <div class="a-nm">${a.who}</div><div class="a-sv">${a.sv}</div><div class="a-tm">${fmt(a.s)}–${fmt(a.e)}</div></div>`;
+    });
+    html+='</div>';
+  }
+  g.innerHTML=html;
+  wireGrid(); renderGlance(); renderRail();
+  const gs=document.querySelector('.grid-scroll'); gs.scrollTop=Math.max(0,(NOW-DAY_START)*PXH-140);
+}
+
+function gapHtml(ln,s,e){const top=(s-DAY_START)*PXH,hgt=(e-s)*PXH-3;return `<div class="gap" data-lane="${ln}" data-s="${s}" data-e="${e}" style="top:${top}px;height:${hgt}px">${hgt>28?'+ open · '+fmt(s):'+'}</div>`;}
+
+function wireGrid(){
+  document.querySelectorAll('.appt').forEach(el=>{
+    el.onclick=()=>openSheet(+el.dataset.id);
+    el.ondragstart=()=>{dragId=+el.dataset.id;el.classList.add('dragging');};
+    el.ondragend=()=>{el.classList.remove('dragging');document.querySelectorAll('.gap').forEach(g=>g.classList.remove('drop'));};
+  });
+  document.querySelectorAll('.gap').forEach(g=>{
+    g.onclick=()=>toast(`New booking · ${fmt(+g.dataset.s)} · ${PROFILES[curKey].staff[+g.dataset.lane]}`);
+    g.ondragover=e=>{e.preventDefault();g.classList.add('drop');};
+    g.ondragleave=()=>g.classList.remove('drop');
+    g.ondrop=e=>{
+      e.preventDefault();
+      const a=state.find(x=>x.id===dragId); if(!a)return;
+      const dur=a.e-a.s, ns=+g.dataset.s;
+      if(ns+dur> +g.dataset.e+0.01){toast("Doesn't fit that gap — pick a longer opening");g.classList.remove('drop');return;}
+      a.lane=+g.dataset.lane; a.s=ns; a.e=ns+dur; if(a.st==='done')a.st='conf';
+      dragId=null; render(); toast(`<b>${a.who}</b> moved to ${fmt(ns)}`);
+    };
+  });
+}
+
+function firstOpenGap(afterNow){
+  const P=PROFILES[curKey];
+  for(let ln=0;ln<P.staff.length;ln++){
+    const la=state.filter(a=>a.lane===ln).sort((a,b)=>a.s-b.s);
+    let cur=afterNow?Math.max(NOW,DAY_START):DAY_START;
+    for(const a of la){if(a.s-cur>=0.5)return{s:cur,lane:ln};cur=Math.max(cur,a.e);}
+    if(DAY_END-cur>=0.5)return{s:cur,lane:ln};
+  }
+  return null;
+}
+
+function renderGlance(){
+  const P=PROFILES[curKey];
+  const upcoming=state.filter(a=>a.e>NOW&&!noshow[a.id]).sort((a,b)=>a.s-b.s);
+  const next=upcoming.find(a=>a.s>=NOW)||upcoming[0];
+  const mins=next?Math.round((next.s-NOW)*60):null;
+  const fg=firstOpenGap(true);
+  const booked=state.reduce((t,a)=>t+(noshow[a.id]?0:(a.e-a.s)),0);
+  const util=Math.round(booked/(P.staff.length*(DAY_END-DAY_START))*100);
+  const walkins=state.filter(a=>a.st==='walk').length;
+  const cards=[
+    {k:'Up next',v:next?next.who.split(' ')[0]:'—',sub:next?`${next.sv} · ${mins<=0?'now':'in '+mins+'m'}`:'nothing scheduled',accent:true},
+    {k:'Booked today',v:util+'%',sub:`${state.filter(a=>!noshow[a.id]).length} appts · ${P.staff.length} ${P.chairword}`},
+    {k:'First opening',v:fg?fmt(fg.s):'full',sub:fg?`${P.staff[fg.lane]} · tap New`:'no gaps left'},
+    {k:'Walk-ins today',v:walkins,sub:walkins?'squeezed in':'none yet'},
+  ];
+  document.getElementById('glance').innerHTML=cards.map(c=>
+    `<div class="gcard ${c.accent?'accent':''}"><div class="gk">${c.k}</div><div class="gv">${c.v}</div><div class="gsub">${c.sub}</div></div>`).join('');
+}
+
+function renderRail(){
+  const P=PROFILES[curKey];
+  const booked=state.reduce((t,a)=>t+(noshow[a.id]?0:(a.e-a.s)),0);
+  const util=Math.round(booked/(P.staff.length*(DAY_END-DAY_START))*100);
+  const risks=state.filter(a=>a.st==='new'&&!checked[a.id]&&!noshow[a.id]).slice(0,3);
+  document.getElementById('rail').innerHTML=`
+    <div class="stat s-plum">
+      <div class="k">Chair utilization</div>
+      <div class="ring"><div class="dial" style="background:conic-gradient(var(--clay) 0 ${util}%, rgba(255,255,255,.12) ${util}% 100%)"><b>${util}%</b></div>
+        <div><div class="v">${state.filter(a=>!noshow[a.id]).length} booked</div><div class="trend up">▲ 6% vs last week</div></div></div>
+    </div>
+    <div class="stat s-mauve">
+      <div class="k">No-show watch</div>
+      <div class="risk-list">${risks.length?risks.map(a=>`<div class="risk-item"><span class="dot"></span>${a.who} · ${fmt(a.s)}<span class="rt">reminder sent</span></div>`).join(''):'<div class="risk-item" style="color:var(--muted)">All clear — no flags</div>'}</div>
+    </div>
+    <div class="stat s-plum">
+      <div class="k">Ratings this week</div>
+      <div class="stars">★★★★★</div>
+      <div class="v" style="font-size:20px;margin-top:4px">4.9 <small style="color:var(--muted);font-size:12px">· 33 reviews</small></div>
+    </div>`;
+}
+
+function openSheet(id){
+  const a=state.find(x=>x.id===id); if(!a)return;
+  const P=PROFILES[curKey], sheet=document.getElementById('sheet');
+  sheet.innerHTML=`
+    <h3>${a.who}</h3>
+    <div class="sh-sv">${a.sv} · ${P.staff[a.lane]}</div>
+    <div class="sh-meta"><span>🕐 ${fmt(a.s)}–${fmt(a.e)}</span><span>${Math.round((a.e-a.s)*60)} min</span><span>${a.st==='walk'?'Walk-in':a.st==='new'?'New client':'Returning'}</span>${checked[id]?'<span style="color:var(--good)">✓ Checked in</span>':''}${noshow[id]?'<span style="color:var(--danger)">No-show</span>':''}</div>
+    <div class="sheet-actions">
+      <button class="sa ok" data-act="checkin">✓ Check in</button>
+      <button class="sa" data-act="remind">🔔 Send reminder</button>
+      <button class="sa" data-act="reschedule">↻ Reschedule</button>
+      <button class="sa bad" data-act="noshow">✕ No-show</button>
+      <button class="sa full" data-act="close">Close</button>
+    </div>`;
+  sheet.querySelectorAll('.sa').forEach(b=>b.onclick=()=>sheetAct(b.dataset.act,id));
+  document.getElementById('sheetBg').classList.add('show');
+  sheet.classList.add('show');
+}
+function closeSheet(){document.getElementById('sheet').classList.remove('show');document.getElementById('sheetBg').classList.remove('show');}
+function sheetAct(act,id){
+  const a=state.find(x=>x.id===id);
+  if(act==='checkin'){checked[id]=!checked[id];noshow[id]=false;toast(checked[id]?`<b>${a.who}</b> checked in`:'Check-in removed');render();closeSheet();}
+  else if(act==='noshow'){noshow[id]=!noshow[id];checked[id]=false;toast(noshow[id]?`<b>${a.who}</b> marked no-show`:'No-show cleared');render();closeSheet();}
+  else if(act==='remind'){toast(`Reminder sent to <b>${a.who}</b>`);closeSheet();}
+  else if(act==='reschedule'){toast(`Drag <b>${a.who}</b> onto a dashed gap to move`);closeSheet();}
+  else closeSheet();
+}
+document.getElementById('sheetBg').onclick=closeSheet;
+
+function load(key){curKey=key;state=clone(key);checked={};noshow={};NOW=nowHours();render();}
+document.getElementById('prof').onchange=e=>load(e.target.value);
+document.getElementById('addApt').onclick=()=>toast('Opening <b>new appointment</b>');
+document.getElementById('blockTime').onclick=()=>toast('<b>Block time</b> — lunch, cleanup, personal');
+document.getElementById('findOpen').onclick=()=>{const fg=firstOpenGap(true);toast(fg?`Next opening: <b>${fmt(fg.s)}</b> with ${PROFILES[curKey].staff[fg.lane]}`:'Fully booked today');};
+document.getElementById('dprev').onclick=()=>toast('◀ Previous day');
+document.getElementById('dnext').onclick=()=>toast('Next day ▶');
+document.getElementById('ask').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.value.trim()){toast('Got it: <b>'+e.target.value.trim()+'</b>');e.target.value='';}});
+document.getElementById('dateLabel').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+load('barber');
+</script>
+</body>
+</html>
