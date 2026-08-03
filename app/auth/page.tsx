@@ -35,7 +35,7 @@ export default function AuthPage() {
         password,
         options: { emailRedirectTo: redirectTo, data: { full_name: name } },
       });
-      setMessage(error ? error.message : "Check your email to confirm your Veya account.");
+      setMessage(error ? error.message : "Check your email to confirm your BookKit account.");
     } else if (mode === "signin") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       setMessage(error ? error.message : "Signed in. Opening Business Studio…");
@@ -52,11 +52,11 @@ export default function AuthPage() {
 
   return (
     <main className="auth-page">
-      <Link className="auth-brand" href="/"><span>V</span> veya</Link>
+      <Link className="auth-brand" href="/"><span>V</span> BookKit</Link>
       <section className="auth-card">
-        <span className="eyebrow">SECURE VEYA ACCOUNT</span>
+        <span className="eyebrow">SECURE BOOKKIT ACCOUNT</span>
         <h1>{mode === "signup" ? "Create your business account." : mode === "forgot" ? "Recover your account." : mode === "reset" ? "Choose a new password." : "Welcome back."}</h1>
-        <p>{mode === "signup" ? "Your business, staff, clients, appointments, and money stay separated from every other Veya business." : "Sign in securely to manage your business."}</p>
+        <p>{mode === "signup" ? "Your business, staff, clients, appointments, and money stay separated from every other BookKit business." : "Sign in securely to manage your business."}</p>
         <form onSubmit={submit}>
           {mode === "signup" && <label>Full name<input required value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" /></label>}
           {mode !== "reset" && <label>Email address<input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></label>}
@@ -68,7 +68,7 @@ export default function AuthPage() {
           {mode !== "signin" && <button onClick={() => setMode("signin")}>Back to sign in</button>}
           {mode === "signin" && <><button onClick={() => setMode("forgot")}>Forgot password?</button><button onClick={() => setMode("signup")}>Create account</button></>}
         </div>
-        <small>Protected by encrypted sessions and Veya’s tenant-separated production database.</small>
+        <small>Protected by encrypted sessions and BookKit’s tenant-separated production database.</small>
       </section>
     </main>
   );

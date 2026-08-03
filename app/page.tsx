@@ -709,15 +709,19 @@ export default function Home() {
   }, [authChecked, authUser, view]);
 
   useEffect(() => {
+    // Selection is reset only when availability changes underneath the client.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!availableTimes.includes(selectedTime)) setSelectedTime(availableTimes[0] || "");
   }, [availableTimes, selectedTime]);
 
   useEffect(() => {
+    // A service change removes add-ons that the new service cannot accept.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedAddons(current => current.filter(addon => enabledAddons.includes(addon)));
-  }, [selectedService.name]); // owner choices control what remains visible for each service
+  }, [selectedService.name, enabledAddons]); // owner choices control what remains visible for each service
 
   useEffect(() => {
-    fetch("/api/veya")
+    fetch("/api/BookKit")
       .then(response => response.ok ? response.json() : Promise.reject())
       .then(data => {
         setSavedAppointments(data.appointments || []);
@@ -750,7 +754,7 @@ export default function Home() {
           });
         }
       })
-      .catch(() => flash("Veya opened in preview mode."))
+      .catch(() => flash("BookKit opened in preview mode."))
       .finally(() => setDataReady(true));
   }, []);
 
@@ -818,7 +822,7 @@ export default function Home() {
       setDashTab("Booking channels");
       flash("Your private Business Studio is ready.");
     } catch {
-      flash("Veya could not create your business yet. Please try again.");
+      flash("BookKit could not create your business yet. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -835,7 +839,7 @@ export default function Home() {
   async function saveProfile(publish: boolean) {
     setSaving(true);
     try {
-      const response = await fetch("/api/veya", {
+      const response = await fetch("/api/BookKit", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -857,7 +861,7 @@ export default function Home() {
       setProfileDirty(false);
       flash(publish ? "Your web profile is published and saved." : "Draft saved permanently.");
     } catch {
-      flash("Veya could not save that change yet. Please try again.");
+      flash("BookKit could not save that change yet. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -902,7 +906,7 @@ export default function Home() {
       const message = error instanceof Error ? error.message : String(error);
       flash(message.toLowerCase().includes("overlap") || message.toLowerCase().includes("conflict")
         ? "That time was just booked. Choose another opening."
-        : "Veya could not save that appointment yet.");
+        : "BookKit could not save that appointment yet.");
     } finally {
       setSaving(false);
     }
@@ -972,7 +976,7 @@ export default function Home() {
   async function savePaymentSettings(connect = false) {
     setSaving(true);
     try {
-      const response = await fetch("/api/veya", {
+      const response = await fetch("/api/BookKit", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -990,7 +994,7 @@ export default function Home() {
       if (connect) setPaymentConnected(true);
       flash(connect ? "Stripe test account connected. Live payouts remain off." : "Payment rules saved.");
     } catch {
-      flash("Veya could not save the payment settings yet.");
+      flash("BookKit could not save the payment settings yet.");
     } finally {
       setSaving(false);
     }
@@ -999,7 +1003,7 @@ export default function Home() {
   async function saveSchedulingSettings(next = schedulingSettings) {
     setSaving(true);
     try {
-      const response = await fetch("/api/veya", {
+      const response = await fetch("/api/BookKit", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ type: "scheduling_settings", settings: next }),
@@ -1008,7 +1012,7 @@ export default function Home() {
       setSchedulingSettings(next);
       flash("Scheduling essentials saved.");
     } catch {
-      flash("Veya could not save those settings yet.");
+      flash("BookKit could not save those settings yet.");
     } finally {
       setSaving(false);
     }
@@ -1018,7 +1022,7 @@ export default function Home() {
     if (bookingManageToken) {
       setCheckoutProcessing(true);
       try {
-        const response = await fetch("/api/veya", {
+        const response = await fetch("/api/BookKit", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -1047,7 +1051,7 @@ export default function Home() {
     setCheckoutProcessing(true);
     try {
       const amount = Number(selectedService.deposit.replace(/[^0-9]/g, "")) * 100;
-      const response = await fetch("/api/veya", {
+      const response = await fetch("/api/BookKit", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -1062,7 +1066,7 @@ export default function Home() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error();
-      const appointmentResponse = await fetch("/api/veya", {
+      const appointmentResponse = await fetch("/api/BookKit", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -1099,7 +1103,7 @@ export default function Home() {
         start_time: selectedTime,
         status: "Confirmed",
       }]);
-      setBookingReference(`VEY-${appointmentData.id.slice(0, 6).toUpperCase()}`);
+      setBookingReference(`BK-${appointmentData.id.slice(0, 6).toUpperCase()}`);
       setBookingManageToken(appointmentData.manageToken);
       setConfirmed(true);
     } catch {
@@ -1110,7 +1114,7 @@ export default function Home() {
   }
 
   function shareProfile() {
-    const shareData = { title: "Coral African Hair Braiding", text: "View services and book Coral African Hair Braiding on Veya.", url: window.location.href };
+    const shareData = { title: "Coral African Hair Braiding", text: "View services and book Coral African Hair Braiding on BookKit.", url: window.location.href };
     if (navigator.share) void navigator.share(shareData);
     else void navigator.clipboard.writeText(window.location.href).then(() => flash("Profile link copied."));
   }
@@ -1132,14 +1136,14 @@ export default function Home() {
     if (!bookingManageToken) return;
     setSaving(true);
     try {
-      const response = await fetch("/api/veya", {
+      const response = await fetch("/api/BookKit", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ type: "manage_appointment", action: "cancel", manageToken: bookingManageToken }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error);
-      setSavedAppointments(current => current.map(item => item.id === bookingReference.replace("VEY-", "").toLowerCase() ? { ...item, status: "Cancelled" } : item));
+      setSavedAppointments(current => current.map(item => item.id === bookingReference.replace("BK-", "").toLowerCase() ? { ...item, status: "Cancelled" } : item));
       flash("Appointment cancelled. The business can now apply its disclosed deposit policy.");
     } catch (error) {
       flash(error instanceof Error ? error.message : "This appointment could not be cancelled.");
@@ -1184,9 +1188,9 @@ export default function Home() {
     <main>
       {toast && <div className="toast">{toast}</div>}
       {view !== "setup" && view !== "dashboard" && <header className="topbar">
-        <button className="brand" onClick={() => setView("discover")} aria-label="Veya home">
+        <button className="brand" onClick={() => setView("discover")} aria-label="BookKit home">
           <span className="brand-mark">V</span>
-          <span>veya</span>
+          <span>BookKit</span>
         </button>
         <nav className="desktop-nav" aria-label="Main navigation">
           <button className={view === "discover" ? "active" : ""} onClick={() => setView("discover")}>Product</button>
@@ -1209,9 +1213,9 @@ export default function Home() {
             <div className="hero-copy">
               <span className="eyebrow">THE BUSINESS HOME FOR HAIR PROFESSIONALS</span>
               <h1>Your chair.<br />Everything handled.</h1>
-              <p>Veya gives locticians, barbers, braiders, and wig &amp; weave stylists one place to book clients, collect deposits, manage the day, and grow without the chaos.</p>
+              <p>BookKit gives locticians, barbers, braiders, and wig &amp; weave stylists one place to book clients, collect deposits, manage the day, and grow without the chaos.</p>
               <div className="hero-actions">
-                <button className="hero-primary" onClick={() => setView("setup")}>Start with Veya →</button>
+                <button className="hero-primary" onClick={() => setView("setup")}>Start with BookKit →</button>
                 <button className="hero-secondary" onClick={() => setView("how-it-works")}>See how it works</button>
               </div>
               <div className="trust-row">
@@ -1222,11 +1226,11 @@ export default function Home() {
             </div>
             <div className="hero-hair-stage parallax-frame" aria-label="Braiding and wig installation professionals at work">
               <figure className="hair-shot braid-shot">
-                <img src="/veya-hero-braid-distinct.png" alt="Black braider with short natural hair finishing a client’s long jumbo braids" />
+                <img src="/BookKit-hero-braid-distinct.png" alt="Black braider with short natural hair finishing a client’s long jumbo braids" />
                 <figcaption><span>01</span><strong>Braiding</strong></figcaption>
               </figure>
               <figure className="hair-shot wig-shot">
-                <img src="/veya-613-wig.png" alt="Black wig stylist completing a long premium 613 blonde wig install" />
+                <img src="/BookKit-613-wig.png" alt="Black wig stylist completing a long premium 613 blonde wig install" />
                 <figcaption><span>02</span><strong>Wig install</strong></figcaption>
               </figure>
               <div className="hair-booking-float">
@@ -1236,7 +1240,7 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="premium-marquee" aria-label="Veya features">
+          <section className="premium-marquee" aria-label="BookKit features">
             <div>SMART BOOKINGS · SERVICE ADD-ONS · DEPOSITS · CONSULTATIONS · CLIENT NOTES · AUTOMATIC REMINDERS · SOLO + SHOP MODE · SMART BOOKINGS · SERVICE ADD-ONS · DEPOSITS ·</div>
           </section>
 
@@ -1250,9 +1254,9 @@ export default function Home() {
               <article><span>02</span><h3>A booking link that looks like you</h3><p>Share a clean booking link immediately. Add a branded landing page, portfolio, colors, policies, and social links only when you want them.</p></article>
               <article><span>03</span><h3>Fewer no-shows. Less chasing.</h3><p>Collect deposits, send confirmations and reminders, protect cancellation windows, and let clients reschedule within your rules.</p></article>
               <article><span>04</span><h3>One chair or the whole shop</h3><p>Run a solo calendar or group independent professionals under one shop, with each stylist controlling their own services and schedule.</p></article>
-              <article><span>05</span><h3>Use your Veya page—or your own website</h3><p>Share one polished booking link or place the complete experience inside a website you already own.</p></article>
-              <article><span>06</span><h3>Your clients stay yours</h3><p>Bring clients from social media, Google, referrals, text messages, or email. Veya organizes the relationship without new-client commissions.</p></article>
-              <article className="channel-story"><span>07</span><h3>Book from anywhere</h3><p>Share your Veya link, add a QR code, or embed booking into an existing website. Every channel feeds one calendar.</p><div className="channel-pills"><b>Booking link</b><b>QR code</b><b>Website embed</b></div></article>
+              <article><span>05</span><h3>Use your BookKit page—or your own website</h3><p>Share one polished booking link or place the complete experience inside a website you already own.</p></article>
+              <article><span>06</span><h3>Your clients stay yours</h3><p>Bring clients from social media, Google, referrals, text messages, or email. BookKit organizes the relationship without new-client commissions.</p></article>
+              <article className="channel-story"><span>07</span><h3>Book from anywhere</h3><p>Share your BookKit link, add a QR code, or embed booking into an existing website. Every channel feeds one calendar.</p><div className="channel-pills"><b>Booking link</b><b>QR code</b><b>Website embed</b></div></article>
             </div>
           </section>
           <section className="premium-break">
@@ -1271,7 +1275,7 @@ export default function Home() {
           <section className="parallax-story">
             <div className="parallax-shade" />
             <div className="parallax-copy">
-              <span className="eyebrow">YOUR WORK BRINGS THEM IN. VEYA GETS THEM BOOKED.</span>
+              <span className="eyebrow">YOUR WORK BRINGS THEM IN. BOOKKIT GETS THEM BOOKED.</span>
               <h2>One link.<br />No back-and-forth.</h2>
               <p>Put your link on Instagram, TikTok, Google, text, or your existing website. Clients choose the right service, add-ons, and an open time without messaging you first.</p>
               <button onClick={() => setView("setup")}>Get your booking link <span>↗</span></button>
@@ -1287,7 +1291,7 @@ export default function Home() {
             </div>
             <div className="experience-grid">
               <article><span>01</span><h3>Set up how you really work</h3><p>Choose your specialty, services, timing, deposits, add-ons, availability, and appointment rules.</p></article>
-              <article><span>02</span><h3>Bring your own clients</h3><p>Veya is not a marketplace. Your clients book through your private link and the relationship stays yours.</p></article>
+              <article><span>02</span><h3>Bring your own clients</h3><p>BookKit is not a marketplace. Your clients book through your private link and the relationship stays yours.</p></article>
               <article><span>03</span><h3>Run everything in one place</h3><p>Appointments, payments, client history, reminders, rebooking, staff, and your optional landing page stay connected.</p></article>
             </div>
           </section>
@@ -1296,17 +1300,17 @@ export default function Home() {
 
       {view === "info" && <section className="info-page">
         <div className="info-hero">
-          <button className="info-back" onClick={() => setView("discover")}>← Back to Veya</button>
-          <span>VEYA {infoPage.toUpperCase()}</span>
-          <h1>{infoPage === "support" ? "How can we help?" : infoPage === "contact" ? "Talk to Veya." : infoPage === "privacy" ? "Your privacy matters." : "Clear terms. No surprises."}</h1>
-          <p>{infoPage === "support" ? "Answers and guidance for setting up your booking link, accepting appointments, and running your business." : infoPage === "contact" ? "Questions, account help, or feedback—send the Veya team a message." : infoPage === "privacy" ? "This notice explains what information Veya uses and how it is protected." : "These terms explain the rules for using Veya’s booking and business tools."}</p>
+          <button className="info-back" onClick={() => setView("discover")}>← Back to BookKit</button>
+          <span>BOOKKIT {infoPage.toUpperCase()}</span>
+          <h1>{infoPage === "support" ? "How can we help?" : infoPage === "contact" ? "Talk to BookKit." : infoPage === "privacy" ? "Your privacy matters." : "Clear terms. No surprises."}</h1>
+          <p>{infoPage === "support" ? "Answers and guidance for setting up your booking link, accepting appointments, and running your business." : infoPage === "contact" ? "Questions, account help, or feedback—send the BookKit team a message." : infoPage === "privacy" ? "This notice explains what information BookKit uses and how it is protected." : "These terms explain the rules for using BookKit’s booking and business tools."}</p>
         </div>
 
         {infoPage === "support" && <div className="info-content support-grid">
           <article><span>01</span><h2>Getting started</h2><p>Create your account, add services and availability, then copy your booking link. The optional mini-website can be added later.</p></article>
           <article><span>02</span><h2>Bookings</h2><p>Clients choose a service, available date and time, complete your intake questions, accept policies, and confirm payment.</p></article>
           <article><span>03</span><h2>Payments</h2><p>Connect Stripe from Business Studio → Payments. Choose deposits, full payment, card hold, or pay later for each service.</p></article>
-          <article><span>04</span><h2>Need a person?</h2><p>Contact Veya for account, payment, or setup support and include the email used for your business account.</p><button onClick={() => openInfo("contact")}>Contact support →</button></article>
+          <article><span>04</span><h2>Need a person?</h2><p>Contact BookKit for account, payment, or setup support and include the email used for your business account.</p><button onClick={() => openInfo("contact")}>Contact support →</button></article>
         </div>}
 
         {infoPage === "contact" && <div className="info-content contact-layout">
@@ -1322,21 +1326,21 @@ export default function Home() {
 
         {infoPage === "privacy" && <div className="info-content policy-copy">
           <p className="policy-date">Effective July 29, 2026</p>
-          <h2>Information Veya collects</h2><p>Veya may collect business account details, service and availability settings, client contact information, appointment details, device information, and records needed to operate and secure the service.</p>
-          <h2>How information is used</h2><p>Information is used to provide booking pages, prevent scheduling conflicts, send confirmations and reminders, process support requests, improve Veya, and protect users from fraud or misuse.</p>
-          <h2>Payments</h2><p>Payment and bank-account verification is handled by the connected payment provider. Veya does not store complete card numbers or online-banking credentials.</p>
-          <h2>Sharing and retention</h2><p>Information is shared only with service providers needed to operate Veya, when a business or client directs us to share it, or when required by law. Records are retained only as long as reasonably necessary for the service, safety, accounting, and legal obligations.</p>
-          <h2>Your choices</h2><p>You may request access, correction, export, or deletion of eligible account information by contacting Veya support. Some records may need to be retained for legal or transaction requirements.</p>
-          <aside>This is Veya’s current product-stage privacy notice and should be reviewed by qualified counsel before broad commercial launch.</aside>
+          <h2>Information BookKit collects</h2><p>BookKit may collect business account details, service and availability settings, client contact information, appointment details, device information, and records needed to operate and secure the service.</p>
+          <h2>How information is used</h2><p>Information is used to provide booking pages, prevent scheduling conflicts, send confirmations and reminders, process support requests, improve BookKit, and protect users from fraud or misuse.</p>
+          <h2>Payments</h2><p>Payment and bank-account verification is handled by the connected payment provider. BookKit does not store complete card numbers or online-banking credentials.</p>
+          <h2>Sharing and retention</h2><p>Information is shared only with service providers needed to operate BookKit, when a business or client directs us to share it, or when required by law. Records are retained only as long as reasonably necessary for the service, safety, accounting, and legal obligations.</p>
+          <h2>Your choices</h2><p>You may request access, correction, export, or deletion of eligible account information by contacting BookKit support. Some records may need to be retained for legal or transaction requirements.</p>
+          <aside>This is BookKit’s current product-stage privacy notice and should be reviewed by qualified counsel before broad commercial launch.</aside>
         </div>}
 
         {infoPage === "terms" && <div className="info-content policy-copy">
           <p className="policy-date">Effective July 29, 2026</p>
-          <h2>Using Veya</h2><p>You must provide accurate information, keep your account secure, use Veya lawfully, and have authority to manage the business, services, staff, and booking policies connected to your account.</p>
-          <h2>Business responsibility</h2><p>Each business controls its services, prices, deposits, availability, cancellation rules, client relationships, and fulfillment. Veya provides software and is not the provider of the booked hair or grooming service.</p>
-          <h2>Bookings, payments, and refunds</h2><p>Businesses are responsible for clearly disclosing booking and refund rules. Payment processing may be provided by a third party and is also subject to that provider’s terms. Veya may charge disclosed platform or subscription fees.</p>
-          <h2>Acceptable use</h2><p>Users may not misuse client data, interfere with the service, impersonate others, publish unlawful content, evade fees, or use Veya for deceptive or fraudulent activity.</p>
-          <h2>Availability and changes</h2><p>Veya may update features and these terms as the product develops. Material changes will be communicated through the service or the account email when required.</p>
+          <h2>Using BookKit</h2><p>You must provide accurate information, keep your account secure, use BookKit lawfully, and have authority to manage the business, services, staff, and booking policies connected to your account.</p>
+          <h2>Business responsibility</h2><p>Each business controls its services, prices, deposits, availability, cancellation rules, client relationships, and fulfillment. BookKit provides software and is not the provider of the booked hair or grooming service.</p>
+          <h2>Bookings, payments, and refunds</h2><p>Businesses are responsible for clearly disclosing booking and refund rules. Payment processing may be provided by a third party and is also subject to that provider’s terms. BookKit may charge disclosed platform or subscription fees.</p>
+          <h2>Acceptable use</h2><p>Users may not misuse client data, interfere with the service, impersonate others, publish unlawful content, evade fees, or use BookKit for deceptive or fraudulent activity.</p>
+          <h2>Availability and changes</h2><p>BookKit may update features and these terms as the product develops. Material changes will be communicated through the service or the account email when required.</p>
           <aside>These product-stage terms should be reviewed by qualified counsel before broad commercial launch.</aside>
         </div>}
       </section>}
@@ -1344,20 +1348,20 @@ export default function Home() {
       {view === "how-it-works" && (
         <section className="how-page">
           <div className="how-hero">
-            <span className="eyebrow">HOW VEYA WORKS</span>
+            <span className="eyebrow">HOW BOOKKIT WORKS</span>
             <h1>From social post<br/>to paid appointment.</h1>
-            <p>Veya turns the clients you already have into organized, deposit-protected appointments—without DMs, back-and-forth, or a marketplace taking over the relationship.</p>
+            <p>BookKit turns the clients you already have into organized, deposit-protected appointments—without DMs, back-and-forth, or a marketplace taking over the relationship.</p>
             <button onClick={() => setView("setup")}>Create your booking link →</button>
           </div>
           <div className="how-steps">
             <article><span>01</span><div><small>SET UP</small><h2>Add the way you work.</h2><p>Choose services, prices, durations, deposits, add-ons, preparation questions, policies, and availability. Solo professionals skip team controls; shops can add independent professionals.</p></div></article>
-            <article><span>02</span><div><small>SHARE</small><h2>Put one link everywhere.</h2><p>Add your Veya link to Instagram, TikTok, Google, text messages, QR codes, or your existing website. A branded mini-site is optional.</p></div></article>
+            <article><span>02</span><div><small>SHARE</small><h2>Put one link everywhere.</h2><p>Add your BookKit link to Instagram, TikTok, Google, text messages, QR codes, or your existing website. A branded mini-site is optional.</p></div></article>
             <article><span>03</span><div><small>BOOK</small><h2>Clients choose the right appointment.</h2><p>They select a service, owner-approved add-ons, an open date and time, complete intake questions, accept policies, and pay the required deposit.</p></div></article>
-            <article><span>04</span><div><small>RUN</small><h2>Veya handles the follow-through.</h2><p>Confirmations, reminders, rescheduling rules, client records, payments, rebooking, and the day’s calendar stay together in Business Studio.</p></div></article>
+            <article><span>04</span><div><small>RUN</small><h2>BookKit handles the follow-through.</h2><p>Confirmations, reminders, rescheduling rules, client records, payments, rebooking, and the day’s calendar stay together in Business Studio.</p></div></article>
           </div>
           <div className="how-conversion">
             <span>READY WHEN YOU ARE</span><h2>Your clients are already finding you.<br/>Give them a better way to book.</h2>
-            <button onClick={() => setView("setup")}>Start setting up Veya →</button>
+            <button onClick={() => setView("setup")}>Start setting up BookKit →</button>
             <small>No marketplace. Your clients stay yours.</small>
           </div>
         </section>
@@ -1366,9 +1370,9 @@ export default function Home() {
       {view === "setup" && (
         <section className="onboarding">
           <aside className="onboard-brand">
-            <button className="brand light" onClick={() => setView("discover")}><span className="brand-mark">V</span><span>veya</span></button>
+            <button className="brand light" onClick={() => setView("discover")}><span className="brand-mark">V</span><span>BookKit</span></button>
             <div>
-              <span className="eyebrow">WELCOME TO VEYA</span>
+              <span className="eyebrow">WELCOME TO BOOKKIT</span>
               <h2>{!accountReady ? "Your business, organized." : "Let’s get you bookable."}</h2>
               <p>{!accountReady ? "Create one account for your calendar, clients, payments, and booking link." : "Add your services, availability, and booking rules. Your shareable booking link will be ready when you finish."}</p>
             </div>
@@ -1387,20 +1391,20 @@ export default function Home() {
             {setupPath && <div className="onboard-progress"><i style={{ width: `${setupStep / 8 * 100}%` }} /></div>}
 
             {!accountReady && <div className="onboard-card auth-screen">
-              <span className="step-kicker">WELCOME TO VEYA</span>
+              <span className="step-kicker">WELCOME TO BOOKKIT</span>
               <h1>Create your business account.</h1>
               <p>Set your services and availability, then start sharing one simple booking link.</p>
-              <SetupGuide title="Secure Veya account">Create or sign in to your real account before adding private business, client, appointment, or payment information.</SetupGuide>
+              <SetupGuide title="Secure BookKit account">Create or sign in to your real account before adding private business, client, appointment, or payment information.</SetupGuide>
               <div className="auth-box">
                 <button className="email-button" onClick={() => window.location.assign("/auth")}>
                   <span>✉</span><strong>Create account or sign in</strong>
                 </button>
               </div>
-              <small className="demo-note">Authentication, email confirmation, and password recovery are connected to Veya Production.</small>
+              <small className="demo-note">Authentication, email confirmation, and password recovery are connected to BookKit Production.</small>
             </div>}
 
             {setupPath === "pro" && <div className="onboard-card business-wizard">
-              {setupStep === 1 && <WizardScreen kicker="BUILD YOUR STARTING MENU" title="What do you do?" copy="Choose one or combine several. Veya will create a basic template you can add to and change anytime.">
+              {setupStep === 1 && <WizardScreen kicker="BUILD YOUR STARTING MENU" title="What do you do?" copy="Choose one or combine several. BookKit will create a basic template you can add to and change anytime.">
                 <SetupGuide title="Choose everything your business offers">Selecting more than one combines the starter services into one business page. You are not creating separate accounts.</SetupGuide>
                 <FieldHelp id="specialty-pack" label="What choosing a specialty changes" help="Each choice adds a starter group of common services and setup suggestions. It does not lock your business into that category, and every item can be changed or removed." open={help === "specialty-pack"} onToggle={(id) => setHelp(help === id ? null : id)} />
                 <div className="specialty-choices">{[
@@ -1420,7 +1424,7 @@ export default function Home() {
                 <FieldHelp id="public-details" label="What will clients see?" help="Your business name, booking contact information, and service location can appear during booking and in confirmations. Your personal account email and private account details remain hidden." open={help === "public-details"} onToggle={(id) => setHelp(help === id ? null : id)} />
                 <div className="field-grid"><label className="full">Business name<input value={profileName === "Your Business" ? "" : profileName} onChange={(e)=>setProfileName(e.target.value)} placeholder="Enter your business name" /></label><label>Business phone<input placeholder="Business phone number" /></label><label>Public email<input placeholder="Business email address" /></label><label className="full">Business address<input placeholder="Street, city, state, ZIP" /></label></div>
               </WizardScreen>}
-              {setupStep === 4 && <WizardScreen kicker="STARTING SERVICE MENU" title="Make the menu yours." copy="Veya gives you a useful starting point. Edit, remove, reorder, or add anything your business actually offers.">
+              {setupStep === 4 && <WizardScreen kicker="STARTING SERVICE MENU" title="Make the menu yours." copy="BookKit gives you a useful starting point. Edit, remove, reorder, or add anything your business actually offers.">
                 <div className="setup-tip"><button onClick={() => setHelp(help === "services" ? null : "services")}>i</button><span><strong>Nothing here is permanent.</strong> Tap any service to change its name, time, price, deposit, or consultation rule.</span></div>
                 <div className="catalog-service-builder">
                   <div className="catalog-builder-head"><div><span>BUFFALO SERVICE CATALOG</span><h3>Add a ready-made service</h3></div><b>{serviceCatalog.length} services</b></div>
@@ -1487,16 +1491,16 @@ export default function Home() {
                   <button className="remove-service" aria-label={`Remove ${x}`} onClick={()=>setStarterServices(starterServices.filter((_,n)=>n!==i))}>×</button>
                 </div>})}</div>
                 {help === "services" && <div className="help-popover">You can finish the details later. Every service supports duration, price, deposit, preparation notes, add-ons, and an optional required consultation.</div>}
-                <FieldHelp id="service-time" label="Why accurate service time matters" help="Veya uses duration to calculate real openings and prevent overlapping appointments. Include cleanup or reset time later as buffer time instead of making the service look longer to clients." open={help === "service-time"} onToggle={(id) => setHelp(help === id ? null : id)} />
+                <FieldHelp id="service-time" label="Why accurate service time matters" help="BookKit uses duration to calculate real openings and prevent overlapping appointments. Include cleanup or reset time later as buffer time instead of making the service look longer to clients." open={help === "service-time"} onToggle={(id) => setHelp(help === id ? null : id)} />
               </WizardScreen>}
               {setupStep === 5 && <WizardScreen kicker="YOUR TEAM" title="How many people can clients book?" copy="Choose the number for now. You can add names, schedules, and services later.">
-                <SetupGuide title="This prepares the right calendar">Choose “Just me” if you work alone. For a team, Veya makes room for separate schedules and services for each person.</SetupGuide>
-                <FieldHelp id="team-count" label="You only need the number right now" help="Veya uses this to prepare the correct workspace. You will add each person’s name, services, hours, time off, and booking permissions later inside Business Studio." open={help === "team-count"} onToggle={(id) => setHelp(help === id ? null : id)} />
+                <SetupGuide title="This prepares the right calendar">Choose “Just me” if you work alone. For a team, BookKit makes room for separate schedules and services for each person.</SetupGuide>
+                <FieldHelp id="team-count" label="You only need the number right now" help="BookKit uses this to prepare the correct workspace. You will add each person’s name, services, hours, time off, and booking permissions later inside Business Studio." open={help === "team-count"} onToggle={(id) => setHelp(help === id ? null : id)} />
                 <ChoiceGrid single items={["Just me", "2–5 people", "6–10 people", "11+ people"]} selected={[teamSize]} onToggle={setTeamSize} />
               </WizardScreen>}
               {setupStep === 6 && <WizardScreen kicker="AVAILABILITY" title="Set your regular working hours." copy="Switch days on or off, then choose the exact opening and closing time for each day.">
                 <SetupGuide title="These are your normal hours">Appointments, breaks, days off, and blocked time are handled separately in your calendar. Turning a day off here marks it regularly closed.</SetupGuide>
-                <FieldHelp id="business-hours" label="Hours do not expose every minute" help="These times define the outside edges of your normal workday. Veya only offers times that also fit the selected service, your existing appointments, blocked time, breaks, and booking rules." open={help === "business-hours"} onToggle={(id) => setHelp(help === id ? null : id)} />
+                <FieldHelp id="business-hours" label="Hours do not expose every minute" help="These times define the outside edges of your normal workday. BookKit only offers times that also fit the selected service, your existing appointments, blocked time, breaks, and booking rules." open={help === "business-hours"} onToggle={(id) => setHelp(help === id ? null : id)} />
                 <div className="hours-list">{["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"].map((day,i)=><div key={day} className={!openDays[i] ? "closed" : ""}><button className={`day-toggle ${openDays[i] ? "on" : ""}`} onClick={()=>setOpenDays(openDays.map((v,n)=>n===i?!v:v))}><i /></button><strong>{day}</strong>{openDays[i] ? <div className="time-selects"><select value={businessHours[i][0]} onChange={(e)=>setBusinessHours(businessHours.map((v,n)=>n===i?[e.target.value,v[1]]:v))}>{hourOptions.map(x=><option key={x}>{x}</option>)}</select><span>to</span><select value={businessHours[i][1]} onChange={(e)=>setBusinessHours(businessHours.map((v,n)=>n===i?[v[0],e.target.value]:v))}>{hourOptions.map(x=><option key={x}>{x}</option>)}</select></div> : <span>Closed</span>}</div>)}</div>
               </WizardScreen>}
               {setupStep === 7 && <WizardScreen kicker="BOOKING RULES" title="Protect your time." copy="Choose the controls you want now. Every service can have its own rules later.">
@@ -1519,10 +1523,10 @@ export default function Home() {
                 </div>
                 <div className="booking-link-ready">
                   <span className="step-kicker">YOUR BOOKING LINK</span>
-                  <h3>veya.com/{profileSlug}</h3>
+                  <h3>bookkit.site/{profileSlug}</h3>
                   <p>Use it on Instagram, TikTok, Google, text messages, email, or a QR code.</p>
                   <div>
-                    <button className="primary-action" onClick={() => void navigator.clipboard.writeText(`https://veya.com/${profileSlug}`).then(() => flash("Booking link copied."))}>Copy booking link</button>
+                    <button className="primary-action" onClick={() => void navigator.clipboard.writeText(`https://bookkit.site/${profileSlug}`).then(() => flash("Booking link copied."))}>Copy booking link</button>
                     <button onClick={() => startBooking()}>Preview booking flow</button>
                   </div>
                 </div>
@@ -1543,7 +1547,7 @@ export default function Home() {
       {view === "business" && (
         <section className="profile-page">
           <div className="profile-cover mini-site-hero" style={{backgroundImage:`linear-gradient(90deg,rgba(9,21,39,.96) 0%,rgba(9,21,39,.80) 43%,rgba(9,21,39,.15) 72%),url(${services[1].image})`}}>
-            <div className="profile-cover-tools"><button className="back" onClick={() => setView("discover")}>← Veya</button><div><button onClick={shareProfile}>↗ <span>Share</span></button><button className={profileSaved ? "saved" : ""} onClick={() => { setProfileSaved(!profileSaved); flash(profileSaved ? "Removed from saved businesses." : "Saved to your favorites."); }}>{profileSaved ? "♥" : "♡"} <span>{profileSaved ? "Saved" : "Save"}</span></button></div></div>
+            <div className="profile-cover-tools"><button className="back" onClick={() => setView("discover")}>← BookKit</button><div><button onClick={shareProfile}>↗ <span>Share</span></button><button className={profileSaved ? "saved" : ""} onClick={() => { setProfileSaved(!profileSaved); flash(profileSaved ? "Removed from saved businesses." : "Saved to your favorites."); }}>{profileSaved ? "♥" : "♡"} <span>{profileSaved ? "Saved" : "Save"}</span></button></div></div>
             <div className="mini-site-hero-copy">
               <span>WELCOME TO CORAL AFRICAN HAIR BRAIDING</span>
               <h1>Braiding<br/><em>elegance.</em></h1>
@@ -1671,7 +1675,7 @@ export default function Home() {
                     <div className="booking-selection-facts"><span>Price <strong>${selectedService.price || 0}</strong></span><span>Booking deposit <strong>{selectedService.deposit}</strong></span></div>
                   </div>
                   {isTeam && <div className="professional-choice">
-                    <div><span>TEAM BOOKING</span><strong>Who would you like to book?</strong><p>Choose a professional or let Veya find the earliest opening across the team.</p></div>
+                    <div><span>TEAM BOOKING</span><strong>Who would you like to book?</strong><p>Choose a professional or let BookKit find the earliest opening across the team.</p></div>
                     <label>Professional<select value={selectedStaff} onChange={event => setSelectedStaff(event.target.value)}><option>First available</option><option>Coral</option><option>Nia</option><option>Imani</option></select></label>
                   </div>}
                   <div className="client-addons">
@@ -1737,9 +1741,9 @@ export default function Home() {
                 </>}
 
                 {step === 4 && <>
-                  <span className="eyebrow">STEP 4 OF 4 · SECURE TEST CHECKOUT</span><h1>{bookingManageToken ? "Confirm your new time" : "Hold your appointment"}</h1><p>{bookingManageToken ? "Your original appointment will move to the open time you selected." : "This checkout demonstrates Veya’s payment flow. No real card will be charged."}</p>
+                  <span className="eyebrow">STEP 4 OF 4 · SECURE TEST CHECKOUT</span><h1>{bookingManageToken ? "Confirm your new time" : "Hold your appointment"}</h1><p>{bookingManageToken ? "Your original appointment will move to the open time you selected." : "This checkout demonstrates BookKit’s payment flow. No real card will be charged."}</p>
                   {bookingManageToken ? <div className="test-mode-banner"><b>RESCHEDULE</b><span>No second deposit is collected when a client changes an existing appointment.</span></div> : <>
-                  <div className="test-mode-banner"><b>TEST MODE</b><span>Stripe Connect activation is intentionally off until Veya’s live platform account is connected.</span></div>
+                  <div className="test-mode-banner"><b>TEST MODE</b><span>Stripe Connect activation is intentionally off until BookKit’s live platform account is connected.</span></div>
                   <div className="checkout-methods"><button className="active">Card</button><button onClick={() => flash("Apple Pay appears automatically on supported devices in live mode.")}>Apple Pay</button><button onClick={() => flash("Google Pay appears automatically on supported devices in live mode.")}>Google Pay</button></div>
                   <div className="secure-card-form">
                     <label>Cardholder name<input value={cardName} onChange={e => setCardName(e.target.value)} placeholder="Name on card" /></label>
@@ -1747,7 +1751,7 @@ export default function Home() {
                     <div><label>Expiration<input placeholder="MM / YY" /></label><label>Security code<input inputMode="numeric" placeholder="CVC" /></label></div>
                     <label>ZIP code<input inputMode="numeric" placeholder="14211" /></label>
                   </div>
-                  <div className="checkout-protection"><span>🔒</span><p><strong>Protected payment</strong>Your card details are handled by the payment provider in live mode. Veya never stores raw card numbers.</p></div>
+                  <div className="checkout-protection"><span>🔒</span><p><strong>Protected payment</strong>Your card details are handled by the payment provider in live mode. BookKit never stores raw card numbers.</p></div>
                   </>}
                   <div className="booking-nav"><button onClick={() => setStep(3)}>← Back</button><button className="continue" disabled={checkoutProcessing} onClick={() => void processTestCheckout()}>{checkoutProcessing ? "Processing…" : bookingManageToken ? "Confirm new time" : `Pay ${selectedService.deposit.split(" ")[0]} & request booking`}</button></div>
                 </>}
@@ -1771,7 +1775,7 @@ export default function Home() {
               <div className="confirm-mark">✓</div><span className="eyebrow">BOOKING REQUEST SENT</span>
               <h1>Your time is being held.</h1>
               <p>Coral will receive your request for <strong>{selectedService.name}</strong> on <strong>{selectedDateRecord.day}, {selectedDateRecord.month} {selectedDateRecord.date} at {selectedTime}</strong>.</p>
-              <div className="confirmation-card"><span>Confirmation number</span><strong>{bookingReference || "VEY-PENDING"}</strong><p>Your appointment is securely saved. Email and text delivery will activate when Veya’s messaging providers are connected.</p></div>
+              <div className="confirmation-card"><span>Confirmation number</span><strong>{bookingReference || "BK-PENDING"}</strong><p>Your appointment is securely saved. Email and text delivery will activate when BookKit’s messaging providers are connected.</p></div>
               <div className="confirmation-actions"><button onClick={() => flash("Calendar file is prepared when calendar delivery is connected.")}>Add to calendar</button><button onClick={() => { setConfirmed(false); setStep(2); }}>Reschedule</button><button disabled={saving} onClick={() => void cancelBooking()}>{saving ? "Cancelling…" : "Cancel appointment"}</button><button className="dark-button" onClick={() => setView("business")}>Back to profile</button></div>
             </div>
           )}
@@ -1781,7 +1785,7 @@ export default function Home() {
       {view === "dashboard" && (
         <section className="dashboard-page">
           <aside className="dash-nav">
-            <div className="studio-brand"><div className="brand light"><span className="brand-mark">V</span><span>veya</span></div><span>PRO</span></div>
+            <div className="studio-brand"><div className="brand light"><span className="brand-mark">V</span><span>BookKit</span></div><span>PRO</span></div>
             <button className="dash-business" onClick={()=>setDashTab("Profile")}>
               <div className="coral-logo">YB</div>
               <div><strong>{profileName}</strong><small>{businessRole ? `${businessRole.replace("_", " ")} access` : "Business studio"}</small></div>
@@ -1800,7 +1804,7 @@ export default function Home() {
               <div className="nav-group nav-support">
                 <span className="nav-label">ACCOUNT</span>
                 <button onClick={()=>flash("Business settings opened.")}><i>⚙</i><span>Settings</span></button>
-                <button onClick={()=>flash("Veya help center opened.")}><i>?</i><span>Help & support</span></button>
+                <button onClick={()=>flash("BookKit help center opened.")}><i>?</i><span>Help & support</span></button>
                 <button onClick={() => void signOut()}><i>↗</i><span>Sign out</span></button>
               </div>
             </nav>
@@ -1809,7 +1813,7 @@ export default function Home() {
           </aside>
           <div className="dash-main">
             <div className="workspace-hero">
-              <div><span>VEYA BUSINESS STUDIO</span><h1>{dashTab === "Overview" ? "Your business, at a glance." : dashTab === "Profile" ? "Landing page" : dashTab === "Booking channels" ? "Your booking link" : dashTab}</h1><p>{dashTab === "Overview" ? "Appointments, momentum, and next moves in one beautiful workspace." : dashTab === "Appointments" ? "Every appointment, request, open hour, and client detail—beautifully organized." : dashTab === "Clients" ? "Know every client, their history, preferences, and next opportunity." : dashTab === "Automations" ? "Connect calendars, prevent conflicts, and let reminders handle the follow-up." : dashTab === "Money" ? "See deposits, payouts, tips, and what your business earned." : dashTab === "Marketing" ? "Fill open time and bring good clients back without starting from scratch." : dashTab === "Profile" ? "Optional: turn your booking link into a complete branded landing page." : dashTab === "Booking channels" ? "Copy your link first. Add it to a website only if you already have one." : "Build a menu that matches the way you actually work."}</p></div>
+              <div><span>BOOKKIT BUSINESS STUDIO</span><h1>{dashTab === "Overview" ? "Your business, at a glance." : dashTab === "Profile" ? "Landing page" : dashTab === "Booking channels" ? "Your booking link" : dashTab}</h1><p>{dashTab === "Overview" ? "Appointments, momentum, and next moves in one beautiful workspace." : dashTab === "Appointments" ? "Every appointment, request, open hour, and client detail—beautifully organized." : dashTab === "Clients" ? "Know every client, their history, preferences, and next opportunity." : dashTab === "Automations" ? "Connect calendars, prevent conflicts, and let reminders handle the follow-up." : dashTab === "Money" ? "See deposits, payouts, tips, and what your business earned." : dashTab === "Marketing" ? "Fill open time and bring good clients back without starting from scratch." : dashTab === "Profile" ? "Optional: turn your booking link into a complete branded landing page." : dashTab === "Booking channels" ? "Copy your link first. Add it to a website only if you already have one." : "Build a menu that matches the way you actually work."}</p></div>
               <button onClick={() => setView("business")}>Preview your page ↗</button>
               <div className="workspace-glow" />
             </div>
@@ -1876,7 +1880,7 @@ export default function Home() {
               </div>}
               <div className="calendar-legend"><span><i className="confirmed" /> Confirmed</span><span><i className="request" /> Request</span><span><i className="blocked-time" /> Blocked time</span><button onClick={()=>flash("Time-off controls opened.")}>＋ Block time</button></div>
               </div> : <div className="appointment-list">
-                {savedAppointments.length > 0 && <div className="appointment-day saved"><div className="appointment-day-label"><span>SAVED IN VEYA</span><strong>New appointments</strong><small>Permanent records · conflict protected</small></div><div className="appointment-list-rows">
+                {savedAppointments.length > 0 && <div className="appointment-day saved"><div className="appointment-day-label"><span>SAVED IN BOOKKIT</span><strong>New appointments</strong><small>Permanent records · conflict protected</small></div><div className="appointment-list-rows">
                   {savedAppointments.map(row=><button key={row.id} onClick={()=>setSelectedAppointment(row.client_name)}><time>{row.start_time}</time><span className="client-photo">{row.client_name[0]}</span><span className="list-client"><strong>{row.client_name}</strong><small>{row.service_name} · {row.appointment_date}</small></span><em className="confirmed">{row.status}</em><b>Saved</b><i>›</i></button>)}
                 </div></div>}
                 <div className="appointment-day"><div className="appointment-day-label"><span>TODAY</span><strong>Tue, Jul 28</strong><small>3 appointments · $455 expected</small></div><div className="appointment-list-rows">
@@ -1887,7 +1891,7 @@ export default function Home() {
                 </div></div>
               </div>}
               {selectedAppointment&&<aside className="appointment-drawer"><button className="drawer-close" onClick={()=>setSelectedAppointment(null)}>×</button><span>APPOINTMENT DETAILS</span><div className="drawer-client"><div className="client-photo large">{selectedAppointment[0]}</div><div><h3>{selectedAppointment}</h3><p>{selectedAppointmentRecord ? "Saved production client" : "Example appointment"}</p></div></div><div className="drawer-service"><small>SERVICE</small><strong>{selectedAppointmentRecord?.service_name || (selectedAppointment.includes("Monique")?"Starter Loc Consultation":selectedAppointment.includes("Tia")?"Retwist & Style":selectedAppointment.includes("Aaliyah")?"Box Braids":"Knotless Braids")}</strong><p>{selectedAppointmentRecord ? `${selectedAppointmentRecord.appointment_date} · ${selectedAppointmentRecord.start_time}` : "Tue, July 28 · 9:00 AM"}</p></div><div className="drawer-status"><span>✓ {(selectedAppointmentRecord?.status || "Confirmed").replace("_"," ")}</span><span>{selectedAppointmentRecord ? "✓ Permanent history active" : "✓ Example record"}</span></div>{selectedAppointmentRecord&&<div className="drawer-actions"><button disabled={saving} onClick={()=>void changeAppointmentStatus(selectedAppointmentRecord.id,"completed")}>Complete</button><button disabled={saving} onClick={()=>void changeAppointmentStatus(selectedAppointmentRecord.id,"no_show")}>No-show</button><button disabled={saving} onClick={()=>void changeAppointmentStatus(selectedAppointmentRecord.id,"cancelled")}>Cancel</button></div>}<button className="drawer-more" onClick={()=>flash(selectedAppointmentRecord ? "Every change is saved in appointment history." : "This is an example appointment.")}>Appointment history ···</button></aside>}
-              {newAppointmentOpen&&<div className="appointment-modal-backdrop" onClick={()=>setNewAppointmentOpen(false)}><form className="appointment-modal" onClick={(e)=>e.stopPropagation()} onSubmit={(e)=>{e.preventDefault();void createAppointment()}}><button type="button" className="drawer-close" onClick={()=>setNewAppointmentOpen(false)}>×</button><span>NEW APPOINTMENT</span><h2>Add to your calendar</h2><label>Client<input required value={appointmentDraft.client} onChange={(e)=>setAppointmentDraft({...appointmentDraft,client:e.target.value})} placeholder="Search or enter a client" /></label><label>Service<select value={appointmentDraft.service} onChange={(e)=>{const item=serviceCatalog.find(service=>service.name===e.target.value);setAppointmentDraft({...appointmentDraft,service:e.target.value,duration:item?durationOptionsFor(item)[0]:appointmentDraft.duration})}}>{(["Braiders","Weave/Wigs","Barbers","Locticians"] as const).map(category=><optgroup key={category} label={category}>{serviceCatalog.filter(service=>service.category===category).map(service=><option key={`${category}-${service.name}`}>{service.name}</option>)}</optgroup>)}</select></label><div><label>Duration<select value={appointmentDraft.duration} onChange={(e)=>setAppointmentDraft({...appointmentDraft,duration:e.target.value})}>{durationOptionsFor(serviceCatalog.find(service=>service.name===appointmentDraft.service)||serviceCatalog[0]).map(duration=><option key={duration}>{duration}</option>)}</select></label><label>Start time<select value={appointmentDraft.time} onChange={(e)=>setAppointmentDraft({...appointmentDraft,time:e.target.value})}>{times.map(time=><option key={time}>{time}</option>)}</select></label></div><label>Date<input type="date" value={appointmentDraft.date} onChange={(e)=>setAppointmentDraft({...appointmentDraft,date:e.target.value})} /></label><aside>Veya checks this owner’s saved appointments before confirming the time.</aside><button className="create-appointment" disabled={saving} type="submit">{saving ? "Saving…" : "Create appointment"}</button></form></div>}
+              {newAppointmentOpen&&<div className="appointment-modal-backdrop" onClick={()=>setNewAppointmentOpen(false)}><form className="appointment-modal" onClick={(e)=>e.stopPropagation()} onSubmit={(e)=>{e.preventDefault();void createAppointment()}}><button type="button" className="drawer-close" onClick={()=>setNewAppointmentOpen(false)}>×</button><span>NEW APPOINTMENT</span><h2>Add to your calendar</h2><label>Client<input required value={appointmentDraft.client} onChange={(e)=>setAppointmentDraft({...appointmentDraft,client:e.target.value})} placeholder="Search or enter a client" /></label><label>Service<select value={appointmentDraft.service} onChange={(e)=>{const item=serviceCatalog.find(service=>service.name===e.target.value);setAppointmentDraft({...appointmentDraft,service:e.target.value,duration:item?durationOptionsFor(item)[0]:appointmentDraft.duration})}}>{(["Braiders","Weave/Wigs","Barbers","Locticians"] as const).map(category=><optgroup key={category} label={category}>{serviceCatalog.filter(service=>service.category===category).map(service=><option key={`${category}-${service.name}`}>{service.name}</option>)}</optgroup>)}</select></label><div><label>Duration<select value={appointmentDraft.duration} onChange={(e)=>setAppointmentDraft({...appointmentDraft,duration:e.target.value})}>{durationOptionsFor(serviceCatalog.find(service=>service.name===appointmentDraft.service)||serviceCatalog[0]).map(duration=><option key={duration}>{duration}</option>)}</select></label><label>Start time<select value={appointmentDraft.time} onChange={(e)=>setAppointmentDraft({...appointmentDraft,time:e.target.value})}>{times.map(time=><option key={time}>{time}</option>)}</select></label></div><label>Date<input type="date" value={appointmentDraft.date} onChange={(e)=>setAppointmentDraft({...appointmentDraft,date:e.target.value})} /></label><aside>BookKit checks this owner’s saved appointments before confirming the time.</aside><button className="create-appointment" disabled={saving} type="submit">{saving ? "Saving…" : "Create appointment"}</button></form></div>}
             </section>}
             {dashTab === "Services" && <section className="services-workspace">
               <div className="service-work-head"><div><span>YOUR MENU</span><h2>{starterServices.length} active services</h2><p>Edit details, require a consultation, or change what clients can book.</p></div><button onClick={()=>{setView("setup");setSetupPath("pro");setAccountReady(true);setSetupStep(4)}}>＋ Add service</button></div>
@@ -1935,7 +1939,7 @@ export default function Home() {
               <div className="crm-layout">
                 <div className="client-list">
                   {productionClients.filter(client=>client.name.toLowerCase().includes(clientQuery.toLowerCase())).map(client=><button key={client.id} className={selectedClient?.id===client.id?"active":""} onClick={()=>{setSelectedClientId(client.id);setClientNoteDraft(client.notes||"")}}><span className="client-photo">{client.name[0]}</span><span><strong>{client.name}</strong><small>{client.visit_count ? `${client.visit_count} visits` : "New client"} · {(client.photos || []).length} photos</small></span><em>{client.last_visit_at ? `Last ${new Date(client.last_visit_at).toLocaleDateString()}` : "No completed visit"} ›</em></button>)}
-                  {!productionClients.length&&<div className="empty-client-book"><strong>No clients yet</strong><p>Create the first real appointment and Veya will build the client record automatically.</p></div>}
+                  {!productionClients.length&&<div className="empty-client-book"><strong>No clients yet</strong><p>Create the first real appointment and BookKit will build the client record automatically.</p></div>}
                 </div>
                 {selectedClient?<aside className="client-detail"><div className="client-detail-top"><span className="client-photo large">{selectedClient.name[0]}</span><div><small>PRIVATE CLIENT RECORD</small><h3>{selectedClient.name}</h3><p>{selectedClient.phone || "No phone"} · {selectedClient.email || "No email"}</p></div><label className="client-photo-upload"><input type="file" accept="image/*" disabled={uploadingPhoto} onChange={event=>void uploadClientPhoto(event.target.files?.[0])}/>{uploadingPhoto?"Uploading…":"＋ Add photo"}</label></div>
                   <div className="client-metrics"><div><span>VISITS</span><strong>{selectedClient.visit_count}</strong></div><div><span>APPOINTMENTS</span><strong>{selectedClientHistory.length}</strong></div><div><span>PHOTOS</span><strong>{(selectedClient.photos || []).length}</strong></div></div>
@@ -1957,9 +1961,9 @@ export default function Home() {
               </div>
               <div className="essential-grid">
                 <article className="integration-card">
-                  <div className="essential-title"><span>01 · CALENDAR SYNC</span><h3>One schedule, everywhere.</h3><p>Veya checks connected calendars before showing a time and adds confirmed bookings automatically.</p></div>
-                  <button onClick={()=>flash("Google Calendar connection requires Veya’s Google OAuth credentials.")}><b className="google-g">G</b><span><strong>Google Calendar</strong><small>Provider connection required</small></span><em>＋</em></button>
-                  <button onClick={()=>flash("Outlook connection requires Veya’s Microsoft OAuth credentials.")}><b className="outlook-o">O</b><span><strong>Outlook Calendar</strong><small>Provider connection required</small></span><em>＋</em></button>
+                  <div className="essential-title"><span>01 · CALENDAR SYNC</span><h3>One schedule, everywhere.</h3><p>BookKit checks connected calendars before showing a time and adds confirmed bookings automatically.</p></div>
+                  <button onClick={()=>flash("Google Calendar connection requires BookKit’s Google OAuth credentials.")}><b className="google-g">G</b><span><strong>Google Calendar</strong><small>Provider connection required</small></span><em>＋</em></button>
+                  <button onClick={()=>flash("Outlook connection requires BookKit’s Microsoft OAuth credentials.")}><b className="outlook-o">O</b><span><strong>Outlook Calendar</strong><small>Provider connection required</small></span><em>＋</em></button>
                   <label className="essential-toggle"><span><strong>Prevent double-booking</strong><small>Hide times busy on any connected calendar</small></span><input type="checkbox" checked={schedulingSettings.preventConflicts} onChange={e=>setSchedulingSettings({...schedulingSettings,preventConflicts:e.target.checked})}/><i/></label>
                 </article>
                 <article>
@@ -1974,14 +1978,14 @@ export default function Home() {
                   <div className="essential-fields"><label>Minimum notice<select value={schedulingSettings.minimumNoticeHours} onChange={e=>setSchedulingSettings({...schedulingSettings,minimumNoticeHours:Number(e.target.value)})}><option value={12}>12 hours</option><option value={24}>24 hours</option><option value={48}>48 hours</option><option value={72}>72 hours</option></select></label><label>Book ahead<select value={schedulingSettings.bookingWindowDays} onChange={e=>setSchedulingSettings({...schedulingSettings,bookingWindowDays:Number(e.target.value)})}><option value={30}>30 days</option><option value={60}>60 days</option><option value={90}>90 days</option><option value={180}>6 months</option></select></label></div>
                 </article>
                 <article className="beauty-edge">
-                  <div className="essential-title"><span>04 · VEYA ADVANTAGE</span><h3>Beyond generic scheduling.</h3><p>The booking fundamentals stay simple. Beauty-specific details appear only when the service needs them.</p></div>
+                  <div className="essential-title"><span>04 · BOOKKIT ADVANTAGE</span><h3>Beyond generic scheduling.</h3><p>The booking fundamentals stay simple. Beauty-specific details appear only when the service needs them.</p></div>
                   <div className="edge-pills"><span>Deposits</span><span>Consultations</span><span>Hair included</span><span>Style add-ons</span><span>Inspiration photos</span><span>Prep instructions</span></div>
                   <button onClick={()=>setDashTab("Services")}>Edit service workflows →</button>
                 </article>
               </div>
             </section>}
             {dashTab === "Money" && <section className="money-workspace">
-              <div className="payment-command"><div><span>VEYA PAYMENTS</span><h2>Money without the mystery.</h2><p>Set booking payment rules, track every charge, and see exactly when funds become available.</p></div><div className={`connection-status ${paymentConnected ? "connected" : ""}`}><i>{paymentConnected ? "✓" : "!"}</i><span><strong>{paymentConnected ? "Test account ready" : "Payments not connected"}</strong><small>{paymentConnected ? "Safe testing · live payouts off" : "Connect Stripe before accepting money"}</small></span><button onClick={()=>setPaymentPanel("setup")}>{paymentConnected ? "Manage" : "Connect Stripe"}</button></div></div>
+              <div className="payment-command"><div><span>BOOKKIT PAYMENTS</span><h2>Money without the mystery.</h2><p>Set booking payment rules, track every charge, and see exactly when funds become available.</p></div><div className={`connection-status ${paymentConnected ? "connected" : ""}`}><i>{paymentConnected ? "✓" : "!"}</i><span><strong>{paymentConnected ? "Test account ready" : "Payments not connected"}</strong><small>{paymentConnected ? "Safe testing · live payouts off" : "Connect Stripe before accepting money"}</small></span><button onClick={()=>setPaymentPanel("setup")}>{paymentConnected ? "Manage" : "Connect Stripe"}</button></div></div>
               <div className="payment-tabs">{(["overview","setup","rules","payouts"] as const).map(tab=><button key={tab} className={paymentPanel===tab?"active":""} onClick={()=>setPaymentPanel(tab)}>{tab==="overview"?"Overview":tab==="setup"?"Get paid":tab==="rules"?"Booking rules":"Payouts"}</button>)}</div>
               {paymentPanel === "overview" && <>
               <div className="money-summary"><div><span>AVAILABLE PAYOUT</span><strong>{paymentConnected ? "$1,284.50" : "$0.00"}</strong><small>{paymentConnected ? "Demonstration balance · live payouts off" : "Connect payments to begin accepting deposits"}</small><button onClick={()=>setPaymentPanel("payouts")}>View payouts</button></div><div className="revenue-ring"><b>$4.8k</b><span>July revenue</span></div></div>
@@ -1991,13 +1995,13 @@ export default function Home() {
                 {[["Today, 2:31 PM","Tia Moore","Retwist & Style","Service + tip","+$165.00"],["Today, 9:02 AM","Jasmine Reed","Knotless Braids","Deposit","+$30.00"],["Yesterday","Aaliyah Price","Box Braids","Service + tip","+$245.00"],["Jul 26","Monique Lewis","Loc consultation","Consultation","+$20.00"]].map(row=><article key={row[0]+row[1]}><span>{row[0]}</span><div><strong>{row[1]}</strong><small>{row[2]} · {row[3]}</small></div><b>{row[4]}</b></article>)}
               </div>
               </>}
-              {paymentPanel === "setup" && <div className="payment-setup"><div className="payment-setup-copy"><span>STRIPE CONNECT</span><h2>Connect once. Get paid everywhere.</h2><p>Stripe securely verifies the business owner, links a bank account, and routes deposits, full payments, refunds, tips, and payouts for that business.</p><ul><li><b>Identity verification</b><span>Handled securely by Stripe</span></li><li><b>Bank payouts</b><span>Each business receives its own balance</span></li><li><b>Veya protection</b><span>No raw card or banking data stored here</span></li></ul></div><div className="connect-card"><div className="stripe-lock">S</div><span>{paymentConnected ? "TEST CONNECTION READY" : "CONNECT YOUR BUSINESS"}</span><h3>{paymentConnected ? "Safe testing is on." : "Start accepting secure payments."}</h3><p>{paymentConnected ? "You can test deposits and transaction records. Live charges and payouts stay disabled." : "The live version opens Stripe’s secure onboarding for identity and bank verification."}</p><button disabled={saving || paymentConnected} onClick={()=>void savePaymentSettings(true)}>{paymentConnected ? "Connected in test mode ✓" : saving ? "Connecting…" : "Connect Stripe test account →"}</button><small>Live activation will require Veya’s Stripe platform credentials.</small></div></div>}
+              {paymentPanel === "setup" && <div className="payment-setup"><div className="payment-setup-copy"><span>STRIPE CONNECT</span><h2>Connect once. Get paid everywhere.</h2><p>Stripe securely verifies the business owner, links a bank account, and routes deposits, full payments, refunds, tips, and payouts for that business.</p><ul><li><b>Identity verification</b><span>Handled securely by Stripe</span></li><li><b>Bank payouts</b><span>Each business receives its own balance</span></li><li><b>BookKit protection</b><span>No raw card or banking data stored here</span></li></ul></div><div className="connect-card"><div className="stripe-lock">S</div><span>{paymentConnected ? "TEST CONNECTION READY" : "CONNECT YOUR BUSINESS"}</span><h3>{paymentConnected ? "Safe testing is on." : "Start accepting secure payments."}</h3><p>{paymentConnected ? "You can test deposits and transaction records. Live charges and payouts stay disabled." : "The live version opens Stripe’s secure onboarding for identity and bank verification."}</p><button disabled={saving || paymentConnected} onClick={()=>void savePaymentSettings(true)}>{paymentConnected ? "Connected in test mode ✓" : saving ? "Connecting…" : "Connect Stripe test account →"}</button><small>Live activation will require BookKit’s Stripe platform credentials.</small></div></div>}
               {paymentPanel === "rules" && <div className="payment-rules"><div className="rules-head"><div><span>DEFAULT BOOKING RULE</span><h2>Choose how clients secure time.</h2></div><button disabled={saving} onClick={()=>void savePaymentSettings(false)}>{saving ? "Saving…" : "Save rules"}</button></div><div className="rule-options">{[["no_payment","No payment","Book without collecting money"],["card_hold","Card on file","Protect against late cancellations"],["fixed_deposit","Fixed deposit","Collect the same amount per booking"],["full_payment","Full payment","Charge the full service price"]].map(rule=><button key={rule[0]} className={paymentRule===rule[0]?"active":""} onClick={()=>setPaymentRule(rule[0])}><i>{paymentRule===rule[0]?"✓":"○"}</i><span><strong>{rule[1]}</strong><small>{rule[2]}</small></span></button>)}</div><div className="rule-fields"><label>Default deposit amount<div><span>$</span><input type="number" min="0" value={depositAmount/100} onChange={e=>setDepositAmount(Math.round(Number(e.target.value)*100))}/></div></label><label>Cancellation window<select value={cancellationHours} onChange={e=>setCancellationHours(Number(e.target.value))}><option value={12}>12 hours</option><option value={24}>24 hours</option><option value={48}>48 hours</option><option value={72}>72 hours</option></select></label></div><aside>Individual services can override this default with a percentage deposit, full prepayment, pay-later, or no-show card hold.</aside></div>}
               {paymentPanel === "payouts" && <div className="payout-workspace"><div className="payout-card"><span>NEXT PAYOUT</span><strong>{paymentConnected ? "$1,284.50" : "$0.00"}</strong><p>{paymentConnected ? "Demonstration only · live bank payouts are off" : "Connect and verify a bank account to receive payouts."}</p><button onClick={()=>setPaymentPanel("setup")}>{paymentConnected ? "Manage connected account" : "Connect payment account"}</button></div><div className="payout-timeline"><span>PAYOUT ACTIVITY</span><article><i>✓</i><div><strong>Payment collected</strong><small>Client checkout · funds enter the business balance</small></div></article><article><i>2</i><div><strong>Processing</strong><small>Provider completes settlement and risk checks</small></div></article><article><i>3</i><div><strong>Bank payout</strong><small>Net funds arrive in the connected bank account</small></div></article></div></div>}
             </section>}
             {dashTab === "Marketing" && <section className="marketing-workspace">
               <div className="marketing-hero">
-                <div><span>SMART REBOOKING</span><h2>Your next appointments are already in your client book.</h2><p>Veya finds clients due to return, open times worth filling, and the right people to contact—without training you to discount every service.</p><button onClick={()=>setCampaignReady(true)}>{campaignReady ? "Campaign ready ✓" : "Build a rebooking campaign →"}</button></div>
+                <div><span>SMART REBOOKING</span><h2>Your next appointments are already in your client book.</h2><p>BookKit finds clients due to return, open times worth filling, and the right people to contact—without training you to discount every service.</p><button onClick={()=>setCampaignReady(true)}>{campaignReady ? "Campaign ready ✓" : "Build a rebooking campaign →"}</button></div>
                 <div className="campaign-orbit"><strong>17</strong><span>clients ready<br/>to rebook</span></div>
               </div>
               <div className="marketing-grid">
@@ -2009,7 +2013,7 @@ export default function Home() {
             </section>}
             {dashTab === "Profile" && <section className="profile-builder-workspace">
               <div className="profile-builder-top">
-                <div><span>PUBLIC WEBSITE</span><h2>Build once. Book everywhere.</h2><p>Veya has already used your setup answers to create a complete starting page.</p></div>
+                <div><span>PUBLIC WEBSITE</span><h2>Build once. Book everywhere.</h2><p>BookKit has already used your setup answers to create a complete starting page.</p></div>
                 <div className="profile-publish-actions"><small>{!dataReady ? "Loading…" : profileDirty ? "Unsaved changes" : profilePublished ? "Published" : "Draft"}</small><button disabled={saving} onClick={()=>void saveProfile(false)}>Save draft</button><button disabled={saving} className="publish-button" onClick={()=>void saveProfile(true)}>{saving ? "Saving…" : profilePublished ? "Update site" : "Publish site"}</button></div>
               </div>
               <div className="profile-editor-tabs" aria-label="Booking page editor">
@@ -2040,14 +2044,14 @@ export default function Home() {
                     </div>
                   </>}
                   {profileEditor === "Design" && <>
-                    <div className="panel-intro"><span>BRAND SYSTEM</span><h3>Make it feel like you</h3><p>Veya keeps every combination readable and mobile-ready.</p></div>
+                    <div className="panel-intro"><span>BRAND SYSTEM</span><h3>Make it feel like you</h3><p>BookKit keeps every combination readable and mobile-ready.</p></div>
                     <div className="design-control"><strong>Brand color</strong><input type="color" value={themeColor} onChange={(e)=>{setThemeColor(e.target.value);setProfileDirty(true)}} /></div>
                     <div className="design-control stack"><strong>Page background</strong><div>{(["light","warm","dark"] as const).map(x=><button key={x} className={profileBackground===x?"active":""} onClick={()=>{setProfileBackground(x);setProfileDirty(true)}}>{x}</button>)}</div></div>
                     <div className="accessibility-check"><b>AA</b><div><strong>Accessible color check passed</strong><small>Text and buttons remain easy to read.</small></div></div>
                   </>}
                   {profileEditor === "Settings" && <>
                     <div className="panel-intro"><span>PAGE SETTINGS</span><h3>Link, search & sharing</h3><p>Control how clients find and share your page.</p></div>
-                    <label className="builder-field">Veya URL<div className="slug-input"><span>veya.com/</span><input value={profileSlug} onChange={e=>{setProfileSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,""));setProfileDirty(true)}}/></div></label>
+                    <label className="builder-field">BookKit URL<div className="slug-input"><span>bookkit.site/</span><input value={profileSlug} onChange={e=>{setProfileSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g,""));setProfileDirty(true)}}/></div></label>
                     <label className="builder-field">Search title<input value={`${profileName} | Book Online`} readOnly/></label>
                     <label className="builder-field">Search description<textarea value={`${profileTagline} View services, availability, reviews, and book online.`} readOnly/></label>
                     <div className="profile-settings-note"><b>✓</b><div><strong>Ready to share</strong><small>Your page title, description, and booking link update automatically when you publish.</small></div></div>
@@ -2056,7 +2060,7 @@ export default function Home() {
                 <div className="profile-preview-stage">
                   <div className="preview-toolbar"><div><button className={previewDevice==="desktop"?"active":""} onClick={()=>setPreviewDevice("desktop")}>▱ Desktop</button><button className={previewDevice==="mobile"?"active":""} onClick={()=>setPreviewDevice("mobile")}>▯ Mobile</button></div><span>Live preview</span><button onClick={()=>setView("business")}>Open full page ↗</button></div>
                   <div className={`website-preview ${previewDevice} ${profileBackground} template-${pageTemplate.toLowerCase().replaceAll(" ","-")}`} style={{"--profile-color":themeColor} as React.CSSProperties}>
-                    <div className="preview-browser"><i/><i/><i/><span>veya.com/{profileSlug} · {pageTemplate}</span></div>
+                    <div className="preview-browser"><i/><i/><i/><span>bookkit.site/{profileSlug} · {pageTemplate}</span></div>
                     <div className="preview-cover"><img src={profileBanner} alt="Business banner" /><div className="preview-nav"><strong>{profileLogo?<img src={profileLogo} alt=""/>:profileName.split(" ").map(x=>x[0]).join("").slice(0,2)}</strong><span>Services&nbsp;&nbsp; Portfolio&nbsp;&nbsp; About&nbsp;&nbsp; Reviews</span><button>Book now</button></div><div className="preview-title"><small>BUFFALO · APPOINTMENT ONLY</small><h2>{profileName || "Your Business"}</h2><p>{profileTagline}</p><div><button onClick={()=>setView("business")}>Book appointment</button><span>★ 4.9 · 127 reviews</span></div></div></div>
                     {profileSections.filter(x=>x!=="Hero").map(section=>section==="Services"?<div className="preview-body" key={section}><span>FEATURED SERVICES</span><h3>Choose your next appointment.</h3><div>{starterServices.slice(0,3).map((x,i)=><article key={x}><b>0{i+1}</b><strong>{x.split(" · ")[0]}</strong><span>{x.split(" · ")[1] || "View details"} →</span></article>)}</div></div>:<section className="mini-preview-section" key={section}><span>{section.toUpperCase()}</span><h3>{section==="Portfolio"?"Work worth showing.":section==="About"?"Care, craft, and experience.":section==="Reviews"?"Loved by returning clients.":section==="Location & hours"?"Plan your visit.":`${section}, built into your page.`}</h3><p>{section==="About"?"Your setup information automatically becomes a polished business story.":section==="Reviews"?"★★★★★ “Beautiful work and an easy booking experience.”":"This section is ready to customize with your business content."}</p></section>)}
                     <button className="preview-sticky-book">Book now</button>
@@ -2065,18 +2069,18 @@ export default function Home() {
               </div>
             </section>}
             {dashTab === "Booking channels" && <section className="channels-workspace">
-              <div className="channel-head"><div><span>BOOK EVERYWHERE</span><h2>One calendar. Your link everywhere.</h2><p>Share your booking page or install Veya on your existing website without creating separate schedules, services, or availability.</p></div><div className="sync-badge"><i /> Live sync on</div></div>
+              <div className="channel-head"><div><span>BOOK EVERYWHERE</span><h2>One calendar. Your link everywhere.</h2><p>Share your booking page or install BookKit on your existing website without creating separate schedules, services, or availability.</p></div><div className="sync-badge"><i /> Live sync on</div></div>
               <div className="channel-cards">
-                <article className="featured-channel"><div className="channel-icon page">↗</div><div><strong>Your booking link</strong><p>Ready now. Share it on social media, texts, Google, email, or QR codes. No landing page required.</p><button onClick={()=>void navigator.clipboard.writeText(`https://veya.com/${profileSlug}`).then(()=>flash("Booking link copied."))}>Copy booking link</button></div></article>
+                <article className="featured-channel"><div className="channel-icon page">↗</div><div><strong>Your booking link</strong><p>Ready now. Share it on social media, texts, Google, email, or QR codes. No landing page required.</p><button onClick={()=>void navigator.clipboard.writeText(`https://bookkit.site/${profileSlug}`).then(()=>flash("Booking link copied."))}>Copy booking link</button></div></article>
                 <article><div className="channel-icon embed">&lt;/&gt;</div><div><strong>Add to an existing website <em>Optional</em></strong><p>Use a button, pop-up, or embedded booking panel on Wix, Squarespace, Shopify, WordPress, or another site.</p><button onClick={()=>flash("Website installer opened.")}>Website options</button></div></article>
               </div>
               <div className="embed-builder">
-                <div className="embed-controls"><span>WEBSITE INSTALLER</span><h3>Choose how Veya appears.</h3><p>Your services, colors, staff, policies, and availability update automatically.</p>
+                <div className="embed-controls"><span>WEBSITE INSTALLER</span><h3>Choose how BookKit appears.</h3><p>Your services, colors, staff, policies, and availability update automatically.</p>
                   <div className="embed-options">{(["button","popup","inline"] as const).map(x=><button key={x} className={embedStyle===x?"active":""} onClick={()=>setEmbedStyle(x)}><b>{x==="button"?"Book now button":x==="popup"?"Booking pop-up":"Full inline booking"}</b><small>{x==="button"?"Opens your booking page":x==="popup"?"Books without leaving the site":"Lives inside a page section"}</small></button>)}</div>
                   <label>Button label<input defaultValue="Book an appointment"/></label>
                   <div className="install-actions"><button onClick={()=>flash("Embed code copied.")}>Copy install code</button><button onClick={()=>flash("Instructions ready to send.")}>Email to web designer</button></div>
                 </div>
-                <div className="embed-preview"><div className="fake-site-nav"><strong>YOUR BUSINESS</strong><span>Services&nbsp;&nbsp; About&nbsp;&nbsp; Contact</span></div><div className="fake-site-copy"><small>EXPERT CARE · PERSONAL SERVICE</small><h3>Look good.<br/>Feel like yourself.</h3><p>A sample of how Veya booking fits naturally into an existing business website.</p><button>{embedStyle==="inline"?"Choose a service":"Book an appointment"}</button></div>{embedStyle==="popup"&&<div className="mini-booker"><span>BOOK WITH US</span><strong>What would you like to book?</strong><button>Browse services →</button></div>}{embedStyle==="inline"&&<div className="inline-booker"><b>Popular services</b><span>Knotless braids <em>4 hr 30 min →</em></span><span>Retwist & style <em>2 hr 15 min →</em></span></div>}</div>
+                <div className="embed-preview"><div className="fake-site-nav"><strong>YOUR BUSINESS</strong><span>Services&nbsp;&nbsp; About&nbsp;&nbsp; Contact</span></div><div className="fake-site-copy"><small>EXPERT CARE · PERSONAL SERVICE</small><h3>Look good.<br/>Feel like yourself.</h3><p>A sample of how BookKit booking fits naturally into an existing business website.</p><button>{embedStyle==="inline"?"Choose a service":"Book an appointment"}</button></div>{embedStyle==="popup"&&<div className="mini-booker"><span>BOOK WITH US</span><strong>What would you like to book?</strong><button>Browse services →</button></div>}{embedStyle==="inline"&&<div className="inline-booker"><b>Popular services</b><span>Knotless braids <em>4 hr 30 min →</em></span><span>Retwist & style <em>2 hr 15 min →</em></span></div>}</div>
               </div>
             </section>}
           </div>
@@ -2084,14 +2088,14 @@ export default function Home() {
       )}
 
       {view === "setup" && <div className="setup-footer">
-        <div><span className="brand-mark">V</span><strong>veya</strong><p>Your booking page. Your clients. Your business.</p></div>
+        <div><span className="brand-mark">V</span><strong>BookKit</strong><p>Your booking page. Your clients. Your business.</p></div>
         <nav aria-label="Setup help"><button onClick={() => openInfo("support")}>Support</button><button onClick={() => openInfo("contact")}>Contact</button><button onClick={() => openInfo("privacy")}>Privacy</button><button onClick={() => openInfo("terms")}>Terms</button></nav>
-        <span>© 2026 Veya</span>
+        <span>© 2026 BookKit</span>
       </div>}
 
       {view !== "setup" && view !== "dashboard" && <footer className="site-footer">
         <div className="footer-lead">
-          <div className="brand light"><span className="brand-mark">V</span><span>veya</span></div>
+          <div className="brand light"><span className="brand-mark">V</span><span>BookKit</span></div>
           <h2>Built for the people<br />behind the chair.</h2>
           <p>Bookings, deposits, reminders, clients, and the whole business—together in one place made for hair professionals.</p>
           <button onClick={() => setView("setup")}>Get your booking link →</button>
@@ -2100,7 +2104,7 @@ export default function Home() {
           <div><span>PRODUCT</span><button onClick={() => document.getElementById("platform")?.scrollIntoView({ behavior: "smooth" })}>Features</button><button onClick={() => setView("business")}>Sample booking page</button><button onClick={() => setView("setup")}>Create account</button><button onClick={() => setView("setup")}>Log in</button></div>
           <div><span>SUPPORT</span><button onClick={() => openInfo("support")}>Support center</button><button onClick={() => openInfo("contact")}>Contact</button><button onClick={() => openInfo("privacy")}>Privacy</button><button onClick={() => openInfo("terms")}>Terms</button></div>
         </div>
-        <div className="footer-bottom"><span>© 2026 Veya Booking</span><span>Your clients. Your rules. Your business.</span></div>
+        <div className="footer-bottom"><span>© 2026 BookKit</span><span>Your clients. Your rules. Your business.</span></div>
       </footer>
       }
 

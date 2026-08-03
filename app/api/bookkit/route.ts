@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const FALLBACK_OWNER = "veya-demo-owner";
+const FALLBACK_OWNER = "bookkit-demo-owner";
 
 function ownerEmail(request: NextRequest) {
   return request.headers.get("oai-authenticated-user-email") || FALLBACK_OWNER;

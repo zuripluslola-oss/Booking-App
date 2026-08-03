@@ -6,7 +6,7 @@ export function createSupabaseBrowserClient() {
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || (isServerRender ? "sb_publishable_placeholder" : "");
 
   if (!url || !publishableKey) {
-    throw new Error("Veya authentication is not configured.");
+    throw new Error("BookKit authentication is not configured.");
   }
 
   return createBrowserClient(url, publishableKey);
