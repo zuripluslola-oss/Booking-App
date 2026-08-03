@@ -29,7 +29,18 @@ jobs:
           mkdir -p site
           wget --quiet --recursive --level=2 --page-requisites --convert-links --adjust-extension --no-host-directories --directory-prefix=site https://veya-booking.sockzgobrazy.chatgpt.site/ || true
           test -f site/index.html
-          find site -type f \( -name '*.html' -o -name '*.css' -o -name '*.js' \) -print0 | xargs -0 sed -i             -e 's/Veya Booking/BookKit/g'             -e 's/Veya/BookKit/g'             -e 's/veya\.com/bookkit.app/g'             -e 's/>veya</>BookKit</g'
+          find site -type f \( -name '*.html' -o -name '*.css' -o -name '*.js' \) -print0 | xargs -0 sed -i \
+            -e 's/Veya Booking/BookKit/g' \
+            -e 's/Veya/BookKit/g' \
+            -e 's/veya\.com/bookkit.app/g' \
+            -e 's/>veya</>BookKit</g' \
+            -e 's|"/assets/|"/Booking-App/assets/|g' \
+            -e "s|'/assets/|'/Booking-App/assets/|g" \
+            -e 's|"/veya-|"/Booking-App/veya-|g' \
+            -e "s|'/veya-|'/Booking-App/veya-|g" \
+            -e 's|url(/veya-|url(/Booking-App/veya-|g' \
+            -e 's|"/favicon.svg|"/Booking-App/favicon.svg|g' \
+            -e "s|'/favicon.svg|'/Booking-App/favicon.svg|g"
           touch site/.nojekyll
 
       - name: Configure GitHub Pages
