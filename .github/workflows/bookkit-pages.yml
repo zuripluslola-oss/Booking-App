@@ -44,8 +44,9 @@ jobs:
             -e 's|(e?`https://placeholder.supabase.co`:``)|`https://placeholder.supabase.co`|g' \
             -e 's|(e?`sb_publishable_placeholder`:``)|`sb_publishable_placeholder`|g' \
             -e 's|supabase-browser-CfrekcYB.js|supabase-browser-CfrekcYB-fixed.js|g' \
-            -e 's|\.js"|.js?v=3"|g' \
-            -e "s|\\.js'|.js?v=3'|g"
+            -e 's|\.js"|.js?v=4"|g' \
+            -e "s|\\.js'|.js?v=4'|g" \
+            -e 's|\.js`|.js?v=4`|g'
           if test -f site/assets/supabase-browser-CfrekcYB.js; then
             mv site/assets/supabase-browser-CfrekcYB.js site/assets/supabase-browser-CfrekcYB-fixed.js
           fi
