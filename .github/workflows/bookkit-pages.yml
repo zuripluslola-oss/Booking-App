@@ -1,11 +1,11 @@
-name: Publish BookKit Preview
-# GitHub Pages enabled
+name: Publish BookKit to GitHub Pages
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
+      - "github-pages/**"
       - ".github/workflows/bookkit-pages.yml"
 
 permissions:
@@ -22,63 +22,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Build standalone BookKit preview
-        shell: bash
-        run: |
-          mkdir -p site
-          wget --quiet --recursive --level=2 --page-requisites --convert-links --adjust-extension --no-host-directories --directory-prefix=site https://veya-booking.sockzgobrazy.chatgpt.site/ || true
-          test -f site/index.html
-          find site -type f \( -name '*.html' -o -name '*.css' -o -name '*.js' \) -print0 | xargs -0 sed -i \
-            -e 's/Veya Booking/BookKit/g' \
-            -e 's/Veya/BookKit/g' \
-            -e 's/veya\.com/bookkit.app/g' \
-            -e 's/>veya</>BookKit</g' \
-            -e 's|"/assets/|"/Booking-App/assets/|g' \
-            -e "s|'/assets/|'/Booking-App/assets/|g" \
-            -e 's|"/veya-|"/Booking-App/veya-|g' \
-            -e "s|'/veya-|'/Booking-App/veya-|g" \
-            -e 's|url(/veya-|url(/Booking-App/veya-|g' \
-            -e 's|"/favicon.svg|"/Booking-App/favicon.svg|g' \
-            -e "s|'/favicon.svg|'/Booking-App/favicon.svg|g" \
-            -e 's|(e?`https://placeholder.supabase.co`:``)|`https://placeholder.supabase.co`|g' \
-            -e 's|(e?`sb_publishable_placeholder`:``)|`sb_publishable_placeholder`|g' \
-            -e 's|supabase-browser-CfrekcYB.js|supabase-browser-CfrekcYB-fixed.js|g' \
-            -e 's|\.js"|.js?v=4"|g' \
-            -e "s|\\.js'|.js?v=4'|g" \
-            -e 's|\.js`|.js?v=4`|g'
-          if test -f site/assets/supabase-browser-CfrekcYB.js; then
-            mv site/assets/supabase-browser-CfrekcYB.js site/assets/supabase-browser-CfrekcYB-fixed.js
-          fi
-          cat > site/bookkit-preview.js <<'BOOKKIT_JS'
-          (function(){
-            function openPanel(label){
-              var old=document.getElementById('bookkit-preview-panel'); if(old) old.remove();
-              var panel=document.createElement('div'); panel.id='bookkit-preview-panel';
-              panel.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(14,12,10,.72);display:grid;place-items:center;padding:24px';
-              panel.innerHTML='<div style="max-width:460px;background:#fffaf3;color:#17130f;border-radius:20px;padding:30px;box-shadow:0 24px 80px rgba(0,0,0,.3);font-family:Arial,sans-serif"><div style="font-size:13px;letter-spacing:.14em;font-weight:800;color:#8b4d2c">BOOKKIT PREVIEW</div><h2 style="font-size:28px;margin:10px 0 8px">'+label+'</h2><p style="line-height:1.5;margin:0 0 22px">This public preview is interactive. Account creation and login will connect when BookKit authentication is launched.</p><button id="bookkit-preview-close" style="border:0;border-radius:999px;background:#17130f;color:white;padding:12px 22px;font-weight:700;cursor:pointer">Back to BookKit</button></div>';
-              document.body.appendChild(panel); document.getElementById('bookkit-preview-close').onclick=function(){panel.remove()};
-            }
-            document.addEventListener('click',function(event){
-              var button=event.target.closest('button'); if(!button) return;
-              var label=(button.textContent||'').trim();
-              if(/get started|start with|set up your business|create your booking|create account|log in|get your booking link/i.test(label)){event.preventDefault();event.stopImmediatePropagation();openPanel(label.replace(/[→↗＋]/g,'').trim());}
-            },true);
-          })();
-          BOOKKIT_JS
-          sed -i 's|</body>|<script src="/Booking-App/bookkit-preview.js"></script></body>|' site/index.html
-          touch site/.nojekyll
-
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
-
-      - name: Upload preview
+      - name: Upload Bookkit site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: site
-
+          path: github-pages
   deploy:
     environment:
       name: github-pages
@@ -86,6 +37,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy BookKit
+      - name: Deploy Bookkit
         id: deployment
         uses: actions/deploy-pages@v4
