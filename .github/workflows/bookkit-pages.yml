@@ -40,7 +40,9 @@ jobs:
             -e "s|'/veya-|'/Booking-App/veya-|g" \
             -e 's|url(/veya-|url(/Booking-App/veya-|g' \
             -e 's|"/favicon.svg|"/Booking-App/favicon.svg|g' \
-            -e "s|'/favicon.svg|'/Booking-App/favicon.svg|g"
+            -e "s|'/favicon.svg|'/Booking-App/favicon.svg|g" \
+            -e 's|(e?`https://placeholder.supabase.co`:``)|`https://placeholder.supabase.co`|g' \
+            -e 's|(e?`sb_publishable_placeholder`:``)|`sb_publishable_placeholder`|g'
           touch site/.nojekyll
 
       - name: Configure GitHub Pages
