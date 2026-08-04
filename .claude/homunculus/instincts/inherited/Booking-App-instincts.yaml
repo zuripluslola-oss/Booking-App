@@ -1,0 +1,304 @@
+# Instincts generated from https://github.com/zuripluslola-oss/Booking-App
+# Generated: 2026-07-30T06:15:13.922Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: Booking-App-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/zuripluslola-oss/Booking-App
+---
+
+# Booking App Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: docs
+
+## Evidence
+
+- 4 commits analyzed
+- Detected conventional commit pattern
+- Examples: docs: lock product vision and phased roadmap, docs: add booking engine build specification
+
+---
+id: Booking-App-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/zuripluslola-oss/Booking-App
+---
+
+# Booking App Commit Length
+
+## Action
+
+Keep commit messages concise (~42 characters)
+
+## Evidence
+
+- Average commit message length: 42 chars
+- Based on 4 commits
+
+---
+id: Booking-App-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/zuripluslola-oss/Booking-App
+---
+
+# Booking App Naming Files
+
+## Action
+
+Use snake_case naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: snake_case
+
+---
+id: Booking-App-import-relative
+trigger: "when importing modules"
+confidence: 0.75
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/zuripluslola-oss/Booking-App
+---
+
+# Booking App Import Relative
+
+## Action
+
+Use relative imports for project files
+
+## Evidence
+
+- Import analysis shows relative import pattern
+- Example: import { x } from '../lib/x'
+
+---
+id: Booking-App-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/zuripluslola-oss/Booking-App
+---
+
+# Booking App Export Style
+
+## Action
+
+Prefer named exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: named
+
+---
+id: Booking-App-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/zuripluslola-oss/Booking-App
+---
+
+# Booking App Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: Booking-App-workflow-add-or-update-documentation-file
+trigger: "when doing add or update documentation file"
+confidence: 0.7
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/zuripluslola-oss/Booking-App
+---
+
+# Booking App Workflow Add Or Update Documentation File
+
+## Action
+
+Follow the add-or-update-documentation-file workflow:
+1. Create or update a markdown file in the docs/ directory or its subdirectories.
+2. Commit the changes with a 'docs:' prefix in the commit message.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~4x per month
+- Files: docs/PRODUCT_VISION_AND_ROADMAP.md, docs/specs/booking-engine-spec.md, docs/research/services-research.md
+
+---
+id: booking-app-instinct-file-naming
+trigger: "When creating a new source code file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: zuripluslola-oss/Booking-App
+---
+
+# Booking App Instinct File Naming
+
+## Action
+
+Name the file using snake_case
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.files
+
+---
+id: booking-app-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: zuripluslola-oss/Booking-App
+---
+
+# Booking App Instinct Function Naming
+
+## Action
+
+Name the function using camelCase
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.functions
+
+---
+id: booking-app-instinct-class-naming
+trigger: "When defining a new class"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: zuripluslola-oss/Booking-App
+---
+
+# Booking App Instinct Class Naming
+
+## Action
+
+Name the class using PascalCase
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.classes
+
+---
+id: booking-app-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: zuripluslola-oss/Booking-App
+---
+
+# Booking App Instinct Constant Naming
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE
+
+## Evidence
+
+- Pattern in codeStyle.namingConventions.constants
+
+---
+id: booking-app-instinct-import-style
+trigger: "When importing modules in TypeScript files"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: zuripluslola-oss/Booking-App
+---
+
+# Booking App Instinct Import Style
+
+## Action
+
+Use relative import paths
+
+## Evidence
+
+- Pattern in codeStyle.importStyle
+
+---
+id: booking-app-instinct-export-style
+trigger: "When exporting modules or symbols"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: zuripluslola-oss/Booking-App
+---
+
+# Booking App Instinct Export Style
+
+## Action
+
+Use named exports
+
+## Evidence
+
+- Pattern in codeStyle.exportStyle
+
+---
+id: booking-app-instinct-commit-format
+trigger: "When committing documentation changes"
+confidence: 0.9
+domain: git
+source: repo-analysis
+source_repo: zuripluslola-oss/Booking-App
+---
+
+# Booking App Instinct Commit Format
+
+## Action
+
+Prefix the commit message with 'docs:'
+
+## Evidence
+
+- Seen in commit 'docs: lock product vision and phased roadmap'
+- Pattern in commits.prefixes
+
+---
+id: booking-app-instinct-doc-workflow
+trigger: "When documenting new information or updating existing documentation about the project"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: zuripluslola-oss/Booking-App
+---
+
+# Booking App Instinct Doc Workflow
+
+## Action
+
+Create or update a markdown file in the docs/ directory or its subdirectories and commit with a 'docs:' prefix
+
+## Evidence
+
+- Workflow: add-or-update-documentation-file
+- Pattern in commits and files docs/PRODUCT_VISION_AND_ROADMAP.md, docs/specs/booking-engine-spec.md, docs/research/services-research.md, docs/CURRENT_STATUS.md
+
